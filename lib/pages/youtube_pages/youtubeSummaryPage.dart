@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 // YouTubeSummaryPage Class
 class YouTubeSummaryPage extends StatelessWidget {
-  final String title;
+  final String title; // Video başlığı
   final String timestamp;
   final String summary;
   final String transcript;
@@ -28,9 +28,9 @@ class YouTubeSummaryPage extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
-        title: const Text(
-          "Summary & Transcript",
-          style: TextStyle(
+        title: Text(
+          title.isNotEmpty ? title : "Generated Title", 
+          style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 18,
             color: Colors.black,
@@ -43,7 +43,7 @@ class YouTubeSummaryPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              title,
+              title.isNotEmpty ? title : "No Title Available",
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -64,7 +64,6 @@ class YouTubeSummaryPage extends StatelessWidget {
                 ),
                 const Spacer(),
                 InkWell(
-                  // ignore: avoid_print
                   onTap: () => print("Add to folder"),
                   child: const Row(
                     children: [
@@ -73,7 +72,7 @@ class YouTubeSummaryPage extends StatelessWidget {
                         size: 19,
                         color: Color(0xFF5584EC),
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       Text(
                         "Add to Folder",
                         style: TextStyle(

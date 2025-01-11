@@ -4,7 +4,7 @@ import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/empty_s
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/widget_home_folder.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:al_note_maker_appmagic/pages/home_pages/folder.dart';
+import 'package:al_note_maker_appmagic/pages/folder_pages/folder.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/custom_appbar.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/tab_bar_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/content_cards_widget.dart';
