@@ -1,6 +1,8 @@
 import 'package:al_note_maker_appmagic/pages/recording_pages/recording_pages3.dart';
 import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_appbar_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_backgroundcolor_widget.dart';
+import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_button_widget.dart';
+import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_heador_widget.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -60,32 +62,7 @@ class _RecordAudioPage2State extends State<RecordAudioPage2> {
         child: Column(
           children: [
             const Spacer(flex: 2),
-            const Icon(
-              Icons.mic,
-              size: 64,
-              color: Colors.black,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              "Record your audio",
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-                fontSize: 20,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Record your audio with high quality.",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w400,
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
+            const RecordingHeaderWidget(),
             const Spacer(flex: 2),
             // Çember ve işlem durumu
             SizedBox(
@@ -156,38 +133,7 @@ class _RecordAudioPage2State extends State<RecordAudioPage2> {
                       : const SizedBox.shrink(), // Başlangıçta boş kalır
             ),
             const Spacer(flex: 3),
-            GestureDetector(
-              onTap: isRecording ? stopRecording : startRecording,
-              child: Column(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF3478F6),
-                      borderRadius: BorderRadius.circular(32),
-                    ),
-                    child: Icon(
-                      isRecording ? Icons.stop : Icons.mic,
-                      size: 32,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    isRecording
-                        ? "Tap to finish recording"
-                        : "Tap to start recording",
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w400,
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            RecordingActionWidget(isRecording: isRecording, onStartRecording: startRecording, onStopRecording: stopRecording),
             const Spacer(flex: 2),
           ],
         ),
