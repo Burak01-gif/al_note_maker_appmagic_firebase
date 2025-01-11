@@ -62,6 +62,28 @@ class YouTubeSummaryPage extends StatelessWidget {
                     color: Colors.grey,
                   ),
                 ),
+                const Spacer(),
+                InkWell(
+                  // ignore: avoid_print
+                  onTap: () => print("Add to folder"),
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.folder,
+                        size: 19,
+                        color: Color(0xFF5584EC),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Add to Folder",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF5584EC),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 24),

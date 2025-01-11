@@ -86,7 +86,7 @@ class ApiService {
       await Future(() async {
         while (true) {
           executionResult = await getExecutionStatus(triggerId);
-          print("Execution Result: $executionResult"); // Yanıtı yazdır
+          print("Execution Result: $executionResult");
 
           if (executionResult == null) {
             throw Exception('Execution result is null.');
