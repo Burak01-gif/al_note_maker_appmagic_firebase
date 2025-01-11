@@ -3,7 +3,6 @@ import 'package:al_note_maker_appmagic/pages/youtube_pages/youtubeSummaryPage.da
 import 'package:al_note_maker_appmagic/services/api_services.dart';
 import 'package:flutter/material.dart';
 
-// YouTubePage Class
 class YouTubePage extends StatefulWidget {
   const YouTubePage({super.key});
 
@@ -77,63 +76,85 @@ class _YouTubePageState extends State<YouTubePage> {
   }
 
   Future<void> handleContinue() async {
-    if (youtubeUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter a YouTube link.")),
-      );
-      return;
+  if (youtubeUrl.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Please enter a YouTube link.")),
+    );
+    return;
+  }
+
+  setState(() {
+    isLoading = true;
+    loadingMessage = "Processing video...";
+  });
+
+  try {
+    final ApiService apiService = ApiService();
+
+    // Workflow'u başlat
+    print("Triggering workflow...");
+    final triggerId = await apiService.triggerWorkflow(
+      youtubeUrl,
+      selectedLanguage,
+      "Summarize the video in key points",
+      "Bullet Points",
+    );
+
+    if (triggerId == null) {
+      throw Exception("Failed to trigger workflow");
+    }
+    print("Trigger ID: $triggerId");
+
+    // Workflow durumunu kontrol et
+    print("Polling execution status...");
+    final result = await apiService.pollExecutionStatus(triggerId);
+    print("Result from pollExecutionStatus: $result");
+
+    // step_results içindeki verileri kontrol et
+    String extractedSummary = "No summary available.";
+    String extractedTranscript = "No transcript available.";
+
+    if (result.containsKey('step_results')) {
+      final stepResults = result['step_results'] as List;
+
+      for (final step in stepResults) {
+        if (step['step_name'] == 'ChatGPT' && step['status'] == 'succeeded') {
+          extractedSummary = step['output'] ?? "No summary available.";
+        }
+        if (step['step_name'] == 'Youtube Transcriptor' &&
+            step['status'] == 'succeeded') {
+          extractedTranscript = step['output'] ?? "No transcript available.";
+        }
+      }
     }
 
     setState(() {
-      isLoading = true;
-      loadingMessage = "Processing video...";
+      isLoading = false;
+      summary = extractedSummary;
+      transcript = extractedTranscript;
     });
 
-    try {
-      final ApiService apiService = ApiService();
-
-      // Trigger Workflow
-      print("Triggering workflow...");
-      final triggerId = await apiService.triggerWorkflow(
-          youtubeUrl, selectedLanguage, "Summarize the video in key points", "Bullet Points");
-
-      if (triggerId == null) {
-        throw Exception("Failed to trigger workflow");
-      }
-
-      print("Trigger ID: $triggerId");
-
-      // Poll Execution Status
-      print("Polling execution status...");
-      final result = await apiService.pollExecutionStatus(triggerId);
-
-      setState(() {
-        isLoading = false;
-        summary = result['summary'] ?? "No summary available.";
-        transcript = result['transcript'] ?? "No transcript available.";
-      });
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => YouTubeSummaryPage(
-            title: "Generated Title",
-            timestamp: "${DateTime.now().hour}:${DateTime.now().minute}",
-            summary: summary,
-            transcript: transcript,
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => YouTubeSummaryPage(
+          title: "Generated Title",
+          timestamp: "${DateTime.now().hour}:${DateTime.now().minute}",
+          summary: summary,
+          transcript: transcript,
         ),
-      );
-    } catch (e) {
-      print("Error in handleContinue: $e");
-      setState(() {
-        isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-    }
+      ),
+    );
+  } catch (e) {
+    print("Error in handleContinue: $e");
+    setState(() {
+      isLoading = false;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("An error occurred: $e")),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -1,7 +1,6 @@
-import 'package:al_note_maker_appmagic/functions/cupertinoo/show_delete_dialog.dart';
 import 'package:al_note_maker_appmagic/pages/recording_pages/recording_pages1.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; 
+import 'package:intl/intl.dart';
 
 class ContentCardsWidget extends StatelessWidget {
   final List<Map<String, dynamic>> cards;
@@ -132,20 +131,86 @@ class ContentCardsWidget extends StatelessWidget {
                                     ],
                                   ),
                                 ),
+                                // Üç Nokta Butonu
                                 Positioned(
                                   top: 8.0,
                                   right: 8.0,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.more_vert, color: Colors.grey),
-                                    onPressed: () {
-                                      showDeleteDialog(
-                                        context,
-                                        (int realIndex) {
-                                          onDelete(index);
-                                        },
-                                        index,
+                                  child: GestureDetector(
+                                    onTapDown: (TapDownDetails details) {
+                                      final position = details.globalPosition; // Tıklanılan yerin pozisyonu
+                                      showMenu(
+                                        context: context,
+                                        position: RelativeRect.fromLTRB(
+                                          position.dx,
+                                          position.dy,
+                                          position.dx + 1,
+                                          position.dy + 1,
+                                        ),
+                                        items: [
+                                          PopupMenuItem(
+                                            padding: EdgeInsets.zero,
+                                            child: Container(
+                                              width: 250, // Genişlik
+                                              height: 50, // Yükseklik
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF7F7F7), // Arka plan rengi
+                                                borderRadius: BorderRadius.circular(8), // Köşe yuvarlama
+                                              ),
+                                              alignment: Alignment.centerLeft, // İçerik hizalaması
+                                              child: const Row(
+                                                children: [
+                                                  SizedBox(width: 16), // Soldan boşluk
+                                                  Icon(Icons.delete, color: Colors.red),
+                                                  SizedBox(width: 8),
+                                                  Text(
+                                                    'Delete',
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            onTap: () {
+                                              onDelete(index); // Silme işlemi
+                                            },
+                                          ),
+                                          PopupMenuItem(
+                                            padding: EdgeInsets.zero, // Varsayılan padding'i kaldır
+                                            child: Container(
+                                              width: 250, // Genişlik
+                                              height: 50, // Yükseklik
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF7F7F7), // Arka plan rengi
+                                                borderRadius: BorderRadius.circular(8), // Köşe yuvarlama
+                                              ),
+                                              alignment: Alignment.centerLeft, // İçerik hizalaması
+                                              child: const Row(
+                                                children: [
+                                                  SizedBox(width: 16),
+                                                  Icon(Icons.cancel, color: Colors.grey),
+                                                  SizedBox(width: 8),
+                                                  Text(
+                                                    'Cancel',
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            onTap: () {
+                                              Navigator.pop(context); // Menüyü kapatma
+                                            },
+                                          ),
+                                        ],
                                       );
                                     },
+                                    child: const Icon(
+                                      Icons.more_vert,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -184,5 +249,5 @@ class ContentCardsWidget extends StatelessWidget {
                   );
                 },
               );
-  }
+            }
 }

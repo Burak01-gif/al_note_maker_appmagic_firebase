@@ -1,5 +1,6 @@
 import 'package:al_note_maker_appmagic/functions/cupertinoo/show_folder_Options.dart';
 import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
+import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/empty_state_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/widget_home_folder.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -38,7 +39,7 @@ class HomePage extends StatelessWidget {
           ),
           // Sekme çubuğu
           TabBarWidget(
-            tabTitles: ['All', 'Folders', 'Favorites', 'Youtube'],
+            tabTitles: const ['All', 'Folders', 'Favorites', 'Youtube'],
             selectedIndex: controller.selectedIndex,
             onTabSelect: controller.updateSelectedIndex,
           ),
@@ -112,7 +113,7 @@ class HomePage extends StatelessWidget {
                 : controller.selectedIndex == 3
                     ? YouTubeViewWidget(context)
                     : controller.getFilteredCards().isEmpty
-                        ? _buildEmptyStateWidget(controller.selectedIndex)
+                        ? EmptyStateWidget(selectedIndex: controller.selectedIndex)
                         : ContentCardsWidget(
                             cards: controller.getFilteredCards(),
                             selectedIndex: controller.selectedIndex,
@@ -129,50 +130,6 @@ class HomePage extends StatelessWidget {
           () => controller.addCard(null),
         ),
       ),
-    );
-  }
-
-  /// Boş ekran durumu
-  Widget _buildEmptyStateWidget(int selectedIndex) {
-    String message = selectedIndex == 2
-        ? 'No Favorites Yet'
-        : 'No Audio Files Yet';
-    String subMessage = selectedIndex == 2
-        ? 'Mark notes as favorite to see them here.'
-        : 'Start recording or import audio files to see them here.';
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Image.asset(
-          'assets/home/home_mic.png',
-          width: 100,
-          height: 100,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          message,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-            color: Colors.black,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Text(
-            subMessage,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14,
-              color: Colors.grey,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
