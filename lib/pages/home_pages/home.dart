@@ -48,10 +48,15 @@ class HomePage extends StatelessWidget {
             child: controller.selectedIndex == 1
                 ? buildFoldersView(
                     context: context,
-                    folders: controller.folders,
+                    folders: controller.folders.map((folder) => folder['name'] as String).toList(),
                     folderNameController: TextEditingController(),
-                    onAddFolder: controller.addFolder,
-                    onDeleteFolder: (index) => controller.deleteFolder(index),
+                    onAddFolder: (folderName) async {
+                      await controller.addFolder(folderName);
+                    },
+                    onDeleteFolder: (index) async {
+                      final folderId = controller.folders[index]['id'] as String;
+                      await controller.deleteFolder(folderId);
+                    },
                     showAddFolderDialog: ({
                       required BuildContext context,
                       required TextEditingController folderNameController,
@@ -71,8 +76,7 @@ class HomePage extends StatelessWidget {
                             actions: [
                               TextButton(
                                 onPressed: () {
-                                  final folderName =
-                                      folderNameController.text.trim();
+                                  final folderName = folderNameController.text.trim();
                                   if (folderName.isNotEmpty) {
                                     onCreate(folderName);
                                     folderNameController.clear();
@@ -92,18 +96,26 @@ class HomePage extends StatelessWidget {
                       required int index,
                       required VoidCallback onDelete,
                     }) {
+                      final folderId = controller.folders[index]['id'] as String;
                       showFolderOptions(
                         context: context,
                         folderName: folderName,
                         index: index,
-                        onDelete: onDelete,
+                        onDelete: () async {
+                          await controller.deleteFolder(folderId);
+                        },
                       );
                     },
                     onFolderTap: (folderName) {
+                      final folderId = controller.folders.firstWhere(
+                        (folder) => folder['name'] == folderName,
+                      )['id'] as String;
+
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => FolderPage(
+                            folderId: folderId,
                             folderName: folderName,
                           ),
                         ),
@@ -111,25 +123,34 @@ class HomePage extends StatelessWidget {
                     },
                   )
                 : controller.selectedIndex == 3
-                    ? YouTubeViewWidget(context)
+                    ? YouTubeViewWidget()
                     : controller.getFilteredCards().isEmpty
                         ? EmptyStateWidget(selectedIndex: controller.selectedIndex)
                         : ContentCardsWidget(
                             cards: controller.getFilteredCards(),
                             selectedIndex: controller.selectedIndex,
-                            onDelete: controller.deleteCard,
-                            onToggleFavorite: controller.toggleFavorite,
+                            onDelete: (index) async {
+                              final cardId = controller.cards[index]['id'] as String;
+                              await controller.deleteCard(cardId);
+                            },
+                            onToggleFavorite: (index) async {
+                              final cardId = controller.cards[index]['id'] as String;
+                              await controller.toggleFavorite(cardId);
+                            },
                           ),
           ),
         ],
       ),
       bottomNavigationBar: showCreateNoteButton(
-        context,
-        () => showOptions(
-          context,
-          () => controller.addCard(null),
-        ),
-      ),
+  context,
+  () => showOptions(
+    context,
+    (String? folderId, {bool isYouTube = false}) async {
+      await controller.addCard(folderId, isYouTube: isYouTube);
+    },
+  ),
+),
+
     );
   }
 }

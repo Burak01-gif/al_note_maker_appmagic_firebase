@@ -6,17 +6,17 @@ import 'package:al_note_maker_appmagic/widgets/widgets_home/content_cards_widget
 import 'package:al_note_maker_appmagic/widgets/widgets_home/show_create_note_button.dart';
 
 class FolderPage extends StatelessWidget {
+  final String folderId;
   final String folderName;
 
-  const FolderPage({super.key, required this.folderName});
+  const FolderPage({super.key, required this.folderId, required this.folderName});
 
   @override
   Widget build(BuildContext context) {
     final controller = Provider.of<HomeController>(context);
     final folderCards = controller.cards
-        .where((card) => card['folderName'] == folderName)
+        .where((card) => card['folderId'] == folderId)
         .toList();
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -25,7 +25,6 @@ class FolderPage extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            controller.updateFolderCards(folderName, folderCards);
             Navigator.pop(context);
           },
         ),
@@ -66,24 +65,27 @@ class FolderPage extends StatelessWidget {
           : ContentCardsWidget(
               cards: folderCards,
               selectedIndex: 0,
-              onDelete: (index) {
-                controller.deleteCard(
-                    controller.cards.indexOf(folderCards[index]));
+              onDelete: (index) async {
+                final cardId = folderCards[index]['id'] as String;
+                await controller.deleteCard(cardId);
               },
-              onToggleFavorite: (index) {
-                controller.toggleFavorite(
-                    controller.cards.indexOf(folderCards[index]));
+              onToggleFavorite: (index) async {
+                final cardId = folderCards[index]['id'] as String;
+                await controller.toggleFavorite(cardId);
               },
             ),
       bottomNavigationBar: showCreateNoteButton(
-        context,
-        () => showOptions(
-          context,
-          () {
-            controller.addCard(folderName);
-          },
-        ),
-      ),
+  context,
+  () => showOptions(
+    context,
+    (String? id, {bool isYouTube = false}) async {
+      print("FolderPage folderId: $folderId"); // Loglama
+      await controller.addCard(folderId, isYouTube: isYouTube); // folderId doğru aktarılıyor
+    },
+  ),
+),
+
+
     );
   }
 
@@ -107,8 +109,8 @@ class FolderPage extends StatelessWidget {
         ),
         PopupMenuItem(
           child: const Text("Delete Folder"),
-          onTap: () {
-            controller.deleteFolder(controller.folders.indexOf(folderName));
+          onTap: () async {
+            await controller.deleteFolder(folderId);
             Navigator.pop(context);
           },
         ),

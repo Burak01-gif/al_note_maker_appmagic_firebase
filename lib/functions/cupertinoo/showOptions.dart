@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:al_note_maker_appmagic/pages/youtube_pages/youtube.dart'; // YouTubePage dosyasının yolu
 
-void showOptions(BuildContext context, Function onAddCard) {
+void showOptions(
+    BuildContext context, Function(String? folderId, {bool isYouTube}) onAddCard) {
   showCupertinoModalPopup(
     context: context,
     builder: (BuildContext context) => CupertinoActionSheet(
@@ -18,33 +18,31 @@ void showOptions(BuildContext context, Function onAddCard) {
         style: TextStyle(fontSize: 16),
       ),
       actions: [
+        // Record an Audio seçeneği
         CupertinoActionSheetAction(
           onPressed: () {
             Navigator.pop(context);
-            onAddCard(); // Audio kaydı eklemek için işlem
+            onAddCard(null); // Bağımsız bir ses kaydı kartı oluştur
           },
           child: const Text(
             'Record an Audio',
-            style: TextStyle(color: Colors.blue), // Mavi renk
+            style: TextStyle(color: Colors.blue),
           ),
         ),
+        // Import from YouTube seçeneği
         CupertinoActionSheetAction(
           onPressed: () {
             Navigator.pop(context);
-            // YouTube sayfasına yönlendirme
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const YouTubePage(),
-              ),
-            );
+            // YouTube kartını oluştur
+            onAddCard(null, isYouTube: true);
           },
           child: const Text(
-            'Import from Youtube',
-            style: TextStyle(color: Colors.blue), // Mavi renk
+            'Import from YouTube',
+            style: TextStyle(color: Colors.blue),
           ),
         ),
       ],
+      // İptal butonu
       cancelButton: CupertinoActionSheetAction(
         onPressed: () {
           Navigator.pop(context);
@@ -52,7 +50,7 @@ void showOptions(BuildContext context, Function onAddCard) {
         isDefaultAction: true,
         child: const Text(
           'Cancel',
-          style: TextStyle(color: Colors.blue), // Mavi renk
+          style: TextStyle(color: Colors.blue),
         ),
       ),
     ),

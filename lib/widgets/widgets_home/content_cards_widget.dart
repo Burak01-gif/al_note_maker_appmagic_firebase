@@ -1,4 +1,5 @@
 import 'package:al_note_maker_appmagic/pages/recording_pages/recording_pages1.dart';
+import 'package:al_note_maker_appmagic/pages/youtube_pages/youtube.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -66,16 +67,24 @@ class ContentCardsWidget extends StatelessWidget {
 
                   return GestureDetector(
                     onTap: () {
-                      // Karta tıklandığında RecordingPage'e yönlendirme yapar.
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RecordingPage1(
-                            title: card['title'] ?? 'Untitled Note',
-                            folderName: card['folderName'] ?? 'All',
+                      if (card['type'] == 'youtube') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const YouTubePage(),
                           ),
-                        ),
-                      );
+                        );
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RecordingPage1(
+                              title: card['title'] ?? 'Untitled Note',
+                              folderName: card['folderName'] ?? 'All',
+                            ),
+                          ),
+                        );
+                      }
                     },
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
@@ -103,10 +112,14 @@ class ContentCardsWidget extends StatelessWidget {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Icon(
-                                        Icons.mic,
+                                      Icon(
+                                        card['type'] == 'youtube'
+                                            ? Icons.video_library
+                                            : Icons.mic,
                                         size: 28.0,
-                                        color: Color(0xFF5584EC),
+                                        color: card['type'] == 'youtube'
+                                            ? Colors.red
+                                            : const Color(0xFF5584EC),
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
@@ -131,13 +144,12 @@ class ContentCardsWidget extends StatelessWidget {
                                     ],
                                   ),
                                 ),
-                                // Üç Nokta Butonu
                                 Positioned(
                                   top: 8.0,
                                   right: 8.0,
                                   child: GestureDetector(
                                     onTapDown: (TapDownDetails details) {
-                                      final position = details.globalPosition; // Tıklanılan yerin pozisyonu
+                                      final position = details.globalPosition;
                                       showMenu(
                                         context: context,
                                         position: RelativeRect.fromLTRB(
@@ -150,46 +162,51 @@ class ContentCardsWidget extends StatelessWidget {
                                           PopupMenuItem(
                                             padding: EdgeInsets.zero,
                                             child: Container(
-                                              width: 250, // Genişlik
-                                              height: 50, // Yükseklik
+                                              width: 250,
+                                              height: 50,
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFF7F7F7), // Arka plan rengi
-                                                borderRadius: BorderRadius.circular(8), // Köşe yuvarlama
+                                                color: const Color(0xFFF7F7F7),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
-                                              alignment: Alignment.centerLeft, // İçerik hizalaması
+                                              alignment: Alignment.centerLeft,
                                               child: const Row(
                                                 children: [
-                                                  SizedBox(width: 16), // Soldan boşluk
-                                                  Icon(Icons.delete, color: Colors.red),
+                                                  SizedBox(width: 16),
+                                                  Icon(Icons.delete,
+                                                      color: Colors.red),
                                                   SizedBox(width: 8),
                                                   Text(
                                                     'Delete',
                                                     style: TextStyle(
                                                       color: Colors.black,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
                                                 ],
                                               ),
                                             ),
                                             onTap: () {
-                                              onDelete(index); // Silme işlemi
+                                              onDelete(index);
                                             },
                                           ),
                                           PopupMenuItem(
-                                            padding: EdgeInsets.zero, // Varsayılan padding'i kaldır
+                                            padding: EdgeInsets.zero,
                                             child: Container(
-                                              width: 250, // Genişlik
-                                              height: 50, // Yükseklik
+                                              width: 250,
+                                              height: 50,
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFF7F7F7), // Arka plan rengi
-                                                borderRadius: BorderRadius.circular(8), // Köşe yuvarlama
+                                                color: const Color(0xFFF7F7F7),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
-                                              alignment: Alignment.centerLeft, // İçerik hizalaması
+                                              alignment: Alignment.centerLeft,
                                               child: const Row(
                                                 children: [
                                                   SizedBox(width: 16),
-                                                  Icon(Icons.cancel, color: Colors.grey),
+                                                  Icon(Icons.cancel,
+                                                      color: Colors.grey),
                                                   SizedBox(width: 8),
                                                   Text(
                                                     'Cancel',
@@ -201,7 +218,7 @@ class ContentCardsWidget extends StatelessWidget {
                                               ),
                                             ),
                                             onTap: () {
-                                              Navigator.pop(context); // Menüyü kapatma
+                                              Navigator.pop(context);
                                             },
                                           ),
                                         ],
@@ -249,5 +266,5 @@ class ContentCardsWidget extends StatelessWidget {
                   );
                 },
               );
-            }
+  }
 }

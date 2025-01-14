@@ -5,6 +5,7 @@ import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_butto
 import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_heador_widget.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:record/record.dart' ;
 
 class RecordAudioPage2 extends StatefulWidget {
   const RecordAudioPage2({Key? key}) : super(key: key);
@@ -18,6 +19,7 @@ class _RecordAudioPage2State extends State<RecordAudioPage2> {
   bool isProcessing = false; // İşleme durumu
   int secondsElapsed = 0; // Geçen süre
   Timer? timer;
+  final record = AudioRecorder();
 
   void startRecording() {
     setState(() {
@@ -133,7 +135,12 @@ class _RecordAudioPage2State extends State<RecordAudioPage2> {
                       : const SizedBox.shrink(), // Başlangıçta boş kalır
             ),
             const Spacer(flex: 3),
-            RecordingActionWidget(isRecording: isRecording, onStartRecording: startRecording, onStopRecording: stopRecording),
+            RecordingActionWidget(
+              isRecording: isRecording,   
+              isProcessing: isProcessing,
+              onStartRecording: startRecording,
+              onStopRecording: stopRecording,
+              ),
             const Spacer(flex: 2),
           ],
         ),
