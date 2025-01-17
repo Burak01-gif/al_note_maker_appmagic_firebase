@@ -5,14 +5,9 @@ import 'package:audioplayers/audioplayers.dart';
 
 class RecordingPage3 extends StatefulWidget {
   final String audioPath; // Yerel ses dosyasının yolu
-<<<<<<< HEAD
   final String audioUrl;  // Firebase Storage'dan alınan URL
 
   const RecordingPage3({Key? key, required this.audioPath, required this.audioUrl}) : super(key: key);
-=======
-
-  const RecordingPage3({Key? key, required this.audioPath}) : super(key: key);
->>>>>>> 76c7f8081162f010be366ea5417d838273018c82
 
   @override
   State<RecordingPage3> createState() => _RecordingPage3State();
@@ -32,7 +27,6 @@ class _RecordingPage3State extends State<RecordingPage3> {
   }
 
   Future<void> _initializeAudio() async {
-<<<<<<< HEAD
     try {
       // Yerel cihazda bulunan ses dosyasını yükle
       await _audioPlayer.setSourceDeviceFile(widget.audioPath);
@@ -79,55 +73,6 @@ class _RecordingPage3State extends State<RecordingPage3> {
       print("Error initializing audio: $e");
     }
   }
-=======
-  try {
-    // Yerel cihazda bulunan ses dosyasını yükle
-    await _audioPlayer.setSourceDeviceFile(widget.audioPath);
-    print("Audio source set successfully.");
-
-    // Toplam süreyi manuel olarak ayarla
-    final duration = await _audioPlayer.getDuration();
-    if (duration != null) {
-      setState(() {
-        totalDuration = duration;
-      });
-    }
-
-    // Toplam süre değişikliğini dinle
-    _audioPlayer.onDurationChanged.listen((duration) {
-      print("Duration changed: ${duration.inMilliseconds} ms");
-      setState(() {
-        totalDuration = duration;
-      });
-    });
-
-    // Çalma pozisyonu değişikliğini dinle
-    _audioPlayer.onPositionChanged.listen((position) {
-      print("Position changed: ${position.inMilliseconds} ms");
-      setState(() {
-        currentDuration = position;
-        playbackPosition = _sliderSync(position, totalDuration);
-      });
-    });
-
-    // Çalma tamamlanma olayını dinle
-    _audioPlayer.onPlayerComplete.listen((_) async {
-      print("Playback completed.");
-      setState(() {
-        isPlaying = false;
-        playbackPosition = 0.0;
-        currentDuration = Duration.zero;
-      });
-        // Kaydı tekrar oynatmaya hazır hale getirmek için kaynak durumunu sıfırla
-      await _audioPlayer.stop(); // Çalma durumunu sıfırla
-      await _audioPlayer.setSourceDeviceFile(widget.audioPath); // Kaynağı yeniden yükle
-    });
-  } catch (e) {
-    print("Error initializing audio: $e");
-  }
-}
-
->>>>>>> 76c7f8081162f010be366ea5417d838273018c82
 
   void togglePlayPause() async {
     if (isPlaying) {
@@ -317,7 +262,6 @@ class _RecordingPage3State extends State<RecordingPage3> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: ElevatedButton(
-<<<<<<< HEAD
                   onPressed: () async {
                     final apiService = ApiService2();
 
@@ -370,10 +314,6 @@ class _RecordingPage3State extends State<RecordingPage3> {
                         SnackBar(content: Text('Failed to generate summary: $e')),
                       );
                     }
-=======
-                  onPressed: () {
-                    print("Generate Summary tapped");
->>>>>>> 76c7f8081162f010be366ea5417d838273018c82
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3478F6),
