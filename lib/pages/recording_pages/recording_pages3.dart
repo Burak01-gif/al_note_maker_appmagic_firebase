@@ -1,52 +1,108 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class RecordingPage3 extends StatefulWidget {
-  const RecordingPage3({Key? key}) : super(key: key);
+  final String audioPath; // Yerel ses dosyasının yolu
+
+  const RecordingPage3({Key? key, required this.audioPath}) : super(key: key);
 
   @override
   State<RecordingPage3> createState() => _RecordingPage3State();
 }
 
 class _RecordingPage3State extends State<RecordingPage3> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
   bool isPlaying = false;
-  double playbackPosition = 0.0;
-  Duration totalDuration = const Duration(seconds: 60);
-  Duration currentDuration = const Duration(seconds: 0);
+  double playbackPosition = 0.0; // 0.0 ile 1.0 arasında Slider konumu
+  Duration totalDuration = Duration.zero; // Ses kaydının toplam süresi
+  Duration currentDuration = Duration.zero; // Çalma esnasındaki süre
 
-  void togglePlayPause() {
+  @override
+  void initState() {
+    super.initState();
+    _initializeAudio();
+  }
+
+  Future<void> _initializeAudio() async {
+  try {
+    // Yerel cihazda bulunan ses dosyasını yükle
+    await _audioPlayer.setSourceDeviceFile(widget.audioPath);
+    print("Audio source set successfully.");
+
+    // Toplam süreyi manuel olarak ayarla
+    final duration = await _audioPlayer.getDuration();
+    if (duration != null) {
+      setState(() {
+        totalDuration = duration;
+      });
+    }
+
+    // Toplam süre değişikliğini dinle
+    _audioPlayer.onDurationChanged.listen((duration) {
+      print("Duration changed: ${duration.inMilliseconds} ms");
+      setState(() {
+        totalDuration = duration;
+      });
+    });
+
+    // Çalma pozisyonu değişikliğini dinle
+    _audioPlayer.onPositionChanged.listen((position) {
+      print("Position changed: ${position.inMilliseconds} ms");
+      setState(() {
+        currentDuration = position;
+        playbackPosition = _sliderSync(position, totalDuration);
+      });
+    });
+
+    // Çalma tamamlanma olayını dinle
+    _audioPlayer.onPlayerComplete.listen((_) async {
+      print("Playback completed.");
+      setState(() {
+        isPlaying = false;
+        playbackPosition = 0.0;
+        currentDuration = Duration.zero;
+      });
+        // Kaydı tekrar oynatmaya hazır hale getirmek için kaynak durumunu sıfırla
+      await _audioPlayer.stop(); // Çalma durumunu sıfırla
+      await _audioPlayer.setSourceDeviceFile(widget.audioPath); // Kaynağı yeniden yükle
+    });
+  } catch (e) {
+    print("Error initializing audio: $e");
+  }
+}
+
+
+  void togglePlayPause() async {
+    if (isPlaying) {
+      await _audioPlayer.pause();
+    } else {
+      await _audioPlayer.resume();
+    }
     setState(() {
       isPlaying = !isPlaying;
     });
-    if (isPlaying) {
-      // Simülasyon için animasyonu başlatıyoruz.
-      Future.delayed(const Duration(milliseconds: 100), updatePlaybackPosition);
-    }
   }
 
-  void updatePlaybackPosition() {
-    if (!isPlaying) return;
-
-    setState(() {
-      playbackPosition += 0.01;
-      currentDuration = Duration(
-          seconds: (totalDuration.inSeconds * playbackPosition).toInt());
-      if (playbackPosition >= 1.0) {
-        isPlaying = false;
-        playbackPosition = 0.0;
-      }
-    });
-
-    if (isPlaying) {
-      Future.delayed(const Duration(milliseconds: 100), updatePlaybackPosition);
-    }
-  }
-
-  void resetRecording() {
+  void resetRecording() async {
+    await _audioPlayer.stop();
     setState(() {
       isPlaying = false;
       playbackPosition = 0.0;
-      currentDuration = const Duration(seconds: 0);
+      currentDuration = Duration.zero;
     });
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
+  double _sliderSync(Duration current, Duration total) {
+    if (total.inMilliseconds == 0) {
+      return 0.0; // Eğer toplam süre sıfırsa, slider başlangıç pozisyonunda kalır
+    }
+    return current.inMilliseconds / total.inMilliseconds;
   }
 
   @override
@@ -81,8 +137,8 @@ class _RecordingPage3State extends State<RecordingPage3> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFFF1F5), // Light peach
-              Color(0xFFECEFFF), // Light lavender
+              Color(0xFFFFF1F5),
+              Color(0xFFECEFFF),
             ],
           ),
         ),
@@ -120,15 +176,12 @@ class _RecordingPage3State extends State<RecordingPage3> {
             Column(
               children: [
                 Slider(
-                  value: playbackPosition,
-                  onChanged: (value) {
-                    setState(() {
-                      playbackPosition = value;
-                      currentDuration = Duration(
-                          seconds:
-                              (totalDuration.inSeconds * playbackPosition)
-                                  .toInt());
-                    });
+                  value: playbackPosition.clamp(0.0, 1.0), // 0 ile 1 arasında tut
+                  onChanged: (value) async {
+                    final newPosition = Duration(
+                      milliseconds: (totalDuration.inMilliseconds * value).toInt(),
+                    );
+                    await _audioPlayer.seek(newPosition);
                   },
                 ),
                 Padding(
@@ -208,7 +261,6 @@ class _RecordingPage3State extends State<RecordingPage3> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: ElevatedButton(
                   onPressed: () {
-                    // Özet oluşturma aksiyonu
                     print("Generate Summary tapped");
                   },
                   style: ElevatedButton.styleFrom(
