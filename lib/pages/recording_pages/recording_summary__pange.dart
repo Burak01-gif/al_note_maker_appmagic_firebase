@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
 class RecordingSummaryPage extends StatelessWidget {
@@ -14,8 +15,26 @@ class RecordingSummaryPage extends StatelessWidget {
     required this.transcript,
   }) : super(key: key);
 
+  // Summary verisini parse etmek için bir yardımcı fonksiyon
+  List<Map<String, dynamic>> parseSummary(String summary) {
+    try {
+      final List<dynamic> summaryList = jsonDecode(summary);
+      return summaryList
+          .map((item) => {
+                'timestamp': item['timestamp'] ?? '',
+                'description': item['description'] ?? '',
+              })
+          .toList();
+    } catch (e) {
+      print("Error parsing summary: $e");
+      return [];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final parsedSummary = parseSummary(summary);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -41,6 +60,7 @@ class RecordingSummaryPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Başlık
             Text(
               title.isNotEmpty ? title : "No Title Available",
               style: const TextStyle(
@@ -50,12 +70,14 @@ class RecordingSummaryPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
+
+            // Zaman damgası
             Row(
               children: [
                 const Icon(Icons.access_time, size: 16, color: Colors.grey),
                 const SizedBox(width: 4),
                 Text(
-                  timestamp,
+                  timestamp.isNotEmpty ? timestamp : "No Timestamp Available",
                   style: const TextStyle(
                     fontSize: 14,
                     color: Colors.grey,
@@ -85,6 +107,8 @@ class RecordingSummaryPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
+
+            // Özet Bölümü
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -103,17 +127,54 @@ class RecordingSummaryPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    summary.isNotEmpty ? summary : "No summary available.",
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                  ),
+                  parsedSummary.isNotEmpty
+                      ? ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: parsedSummary.length,
+                          itemBuilder: (context, index) {
+                            final item = parsedSummary[index];
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item['timestamp']!,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      item['description']!,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        )
+                      : const Text(
+                          "No summary available.",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
+
+            // Transcript Bölümü
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -132,13 +193,21 @@ class RecordingSummaryPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    transcript.isNotEmpty ? transcript : "No transcript available.",
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black87,
-                    ),
-                  ),
+                  transcript.isNotEmpty
+                      ? Text(
+                          transcript,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        )
+                      : const Text(
+                          "No transcript available.",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
                 ],
               ),
             ),

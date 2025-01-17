@@ -154,27 +154,48 @@ class ApiService2 {
 
   /// İş akışını tetikler ve sonuçları döndürür.
   Future<Map<String, dynamic>> getRecordingSummary({
-    required String audioUrl,
-    required String language,
-    required String summarizeRules,
-  }) async {
-    print("Starting Recording Summary Process...");
-    print("Audio URL: $audioUrl, Language: $language, Summarize Rules: $summarizeRules");
+  required String audioUrl,
+  required String language,
+  required String summarizeRules,
+}) async {
+  print("Starting Recording Summary Process...");
+  print("Audio URL: $audioUrl, Language: $language, Summarize Rules: $summarizeRules");
 
-    final triggerId = await triggerWorkflow(
-      audioUrl: audioUrl,
-      language: language,
-      summarizeRules: summarizeRules,
-      outputFormat: 'json',
+  final triggerId = await triggerWorkflow(
+    audioUrl: audioUrl,
+    language: language,
+    summarizeRules: summarizeRules,
+    outputFormat: 'json',
+  );
+
+  if (triggerId == null) {
+    throw Exception('Trigger ID could not be retrieved.');
+  }
+
+  final result = await pollExecutionStatus(triggerId);
+
+  if (result.containsKey('step_results')) {
+    final stepResults = result['step_results'] as List<dynamic>;
+
+    // İlk adımı al
+    final firstStep = stepResults.firstWhere(
+      (step) => step['step_name'] == 'Incredibly Fast Fhisper',
+      orElse: () => null,
     );
 
-    if (triggerId == null) {
-      throw Exception('Trigger ID could not be retrieved.');
+    if (firstStep != null && firstStep['status'] == 'succeeded') {
+      return {
+        'title': result['flow_name'] ?? 'Generated Title',
+        'timestamp': '',
+        'summary': firstStep['output'] ?? '',
+        'transcript': '',
+      };
+    } else {
+      throw Exception('No valid step results found.');
     }
-
-    final result = await pollExecutionStatus(triggerId);
-    print("Final Summary Result: $result");
-
-    return result;
+  } else {
+    throw Exception('No step_results found in the API response.');
   }
+}
+
 }
