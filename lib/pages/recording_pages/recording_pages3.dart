@@ -263,58 +263,45 @@ class _RecordingPage3State extends State<RecordingPage3> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: ElevatedButton(
                   onPressed: () async {
-                    final apiService = ApiService2();
+  final apiService = ApiService2();
 
-                    print("Generate Summary Button Clicked!");
-                    print("Audio URL: ${widget.audioUrl}");
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
 
-                    showDialog(
-                      context: context,
-                      barrierDismissible: false,
-                      builder: (context) => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
+  try {
+    final result = await apiService.getRecordingSummary(
+      audioUrl: widget.audioUrl,
+      language: 'en',
+      summarizeRules: 'Summarize the content into key points with timestamps.',
+    );
 
-                    try {
-                      print("Triggering API Workflow...");
-                      final triggerId = await apiService.triggerWorkflow(
-                        audioUrl: widget.audioUrl,
-                        language: 'en',
-                        summarizeRules: 'Summarize the content into key points with timestamps.',
-                      );
+    Navigator.pop(context); // Progress barı kapat
 
-                      if (triggerId == null) {
-                        throw Exception("Failed to obtain trigger ID.");
-                      }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RecordingSummaryPage(
+          title: result['title'] ?? 'Generated Title',
+          timestamp: result['timestamp'] ?? 'No Timestamp Available',
+          summary: result['summary'] ?? 'No Summary Available',
+          transcript: result['transcript'] ?? 'No Transcript Available',
+        ),
+      ),
+    );
+  } catch (e) {
+    Navigator.pop(context); // Progress barı kapat
+    print("Error in Generate Summary Process: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to generate summary: $e')),
+    );
+  }
+},
 
-                      print("Trigger ID Received: $triggerId");
-
-                      final result = await apiService.pollExecutionStatus(triggerId);
-
-                      print("Final API Result: $result");
-
-                      Navigator.pop(context); // Progress barı kapat
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RecordingSummaryPage(
-                            title: result['title'] ?? 'Generated Title',
-                            timestamp: result['timestamps']?.toString() ?? 'No Timestamp Available',
-                            summary: result['summary'] ?? 'No Summary Available',
-                            transcript: result['transcript'] ?? 'No Transcript Available',
-                          ),
-                        ),
-                      );
-                    } catch (e) {
-                      Navigator.pop(context); // Progress barı kapat
-                      print("Error in Generate Summary Process: $e");
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to generate summary: $e')),
-                      );
-                    }
-                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3478F6),
                     shape: RoundedRectangleBorder(

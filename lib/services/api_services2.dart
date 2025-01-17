@@ -187,7 +187,7 @@ class ApiService2 {
       return {
         'title': result['flow_name'] ?? 'Generated Title',
         'timestamp': '',
-        'summary': firstStep['output'] ?? '',
+        'summary': firstStep['output']?.replaceAll(RegExp(r'^"|"$'), '') ?? 'No Summary Available',
         'transcript': '',
       };
     } else {
@@ -197,5 +197,6 @@ class ApiService2 {
     throw Exception('No step_results found in the API response.');
   }
 }
+
 
 }
