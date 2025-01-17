@@ -7,10 +7,11 @@ import 'package:flutter/material.dart';
 class Onboarding6 extends StatelessWidget {
   const Onboarding6({super.key});
 
+  /// Kullanıcıya derecelendirme dialogunu gösterir.
   void _showRatingDialog(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: false, // Blur tıklanınca hiçbir şey olmaz
+      barrierDismissible: false, // Blur tıklanınca dialog kapanmaz
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -20,6 +21,7 @@ class Onboarding6 extends StatelessWidget {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Başlık
               const Text(
                 "Enjoying Transcribe AI?",
                 textAlign: TextAlign.center,
@@ -31,6 +33,8 @@ class Onboarding6 extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
+
+              // Açıklama
               const Text(
                 "Your app store review helps us grow our community!",
                 textAlign: TextAlign.center,
@@ -42,6 +46,7 @@ class Onboarding6 extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
+
               // Yıldız Derecelendirme
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -54,12 +59,14 @@ class Onboarding6 extends StatelessWidget {
                 }),
               ),
               const SizedBox(height: 20),
+
               // "Not Now" Düğmesi
               TextButton(
                 onPressed: () {
+                  // Home ekranına yönlendirme
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
+                    MaterialPageRoute(builder: (context) => const HomePage(showDialog: true)),
                   );
                 },
                 child: const Text(
@@ -93,8 +100,8 @@ class Onboarding6 extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 20.0),
               child: Image(
                 image: AssetImage('assets/onboarding/onboarding6/img_helpUsGrow@2x.png'),
-                width: 379, 
-                height: 191, 
+                width: 379,
+                height: 191,
                 fit: BoxFit.contain,
               ),
             ),
@@ -121,8 +128,8 @@ class Onboarding6 extends StatelessWidget {
                 Center(
                   child: Image.asset(
                     'assets/onboarding/onboarding6/img_heart@2x.png',
-                    width: 248.0, 
-                    height: 227.0, 
+                    width: 248.0,
+                    height: 227.0,
                     fit: BoxFit.contain,
                   ),
                 ),

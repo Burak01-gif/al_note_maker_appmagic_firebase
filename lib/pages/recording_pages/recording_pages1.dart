@@ -83,7 +83,6 @@ onPressed: () {
     ),
   );
 },
-
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF3478F6),
                   shape: RoundedRectangleBorder(

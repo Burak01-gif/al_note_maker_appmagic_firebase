@@ -5,8 +5,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart'; 
-import 'package:uuid/uuid.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -71,7 +71,7 @@ class Initializer extends StatelessWidget {
 
       if (snapshot.exists) {
         // Daha önce giriş yapılmışsa
-        return true;
+        return false; // Daha önce giriş yapmış kullanıcı
       } else {
         // İlk giriş, kullanıcıyı kaydet
         await userDoc.set({
@@ -79,7 +79,7 @@ class Initializer extends StatelessWidget {
           'firstLogin': true,
           'createdAt': FieldValue.serverTimestamp(),
         });
-        return false;
+        return true; // İlk kez giriş yapan kullanıcı
       }
     } catch (e) {
       print("Firestore yazma hatası: $e");
@@ -95,10 +95,10 @@ class Initializer extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (snapshot.hasData && snapshot.data == true) {
-          return const HomePage(); // İkinci giriş ve sonrası
+        if (snapshot.hasData) {
+          return HomePage(showDialog: snapshot.data!); 
         } else {
-          return const Onboarding1(); // İlk giriş
+          return const Onboarding1(); 
         }
       },
     );

@@ -1,11 +1,15 @@
-import 'package:al_note_maker_appmagic/pages/recording_pages/recording_pages3.dart';
 import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_appbar_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_backgroundcolor_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_button_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_heador_widget.dart';
+import 'package:al_note_maker_appmagic/pages/recording_pages/recording_pages3.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:async';
-import 'package:record/record.dart' ;
+import 'dart:io';
 
 class RecordAudioPage2 extends StatefulWidget {
   const RecordAudioPage2({Key? key}) : super(key: key);
@@ -15,44 +19,131 @@ class RecordAudioPage2 extends StatefulWidget {
 }
 
 class _RecordAudioPage2State extends State<RecordAudioPage2> {
-  bool isRecording = false; // Kaydın devam edip etmediği
+  final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
+  bool isRecording = false; // Kayıt durumu
   bool isProcessing = false; // İşleme durumu
   int secondsElapsed = 0; // Geçen süre
+  String? recordedFilePath;
+  String? recordedFileUrl; // Firebase Storage URL
   Timer? timer;
-  final record = AudioRecorder();
 
-  void startRecording() {
-    setState(() {
-      isRecording = true;
-      secondsElapsed = 0;
-    });
-
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        secondsElapsed++;
-      });
-    });
+  @override
+  void initState() {
+    super.initState();
+    _initializeRecorder();
   }
 
-  void stopRecording() {
-    timer?.cancel();
-    setState(() {
-      isRecording = false;
-      isProcessing = true;
-    });
+  Future<void> _initializeRecorder() async {
+    try {
+      await _recorder.openRecorder();
+      print("Recorder initialized successfully.");
+    } catch (e) {
+      print("Error initializing recorder: $e");
+    }
+  }
 
-    Future.delayed(const Duration(seconds: 2), () {
+  Future<bool> _requestPermissions() async {
+    print("Requesting permissions...");
+    final statuses = await [
+      Permission.microphone,
+      Permission.storage,
+      if (Platform.isAndroid) Permission.manageExternalStorage,
+    ].request();
+
+    final microphoneGranted = statuses[Permission.microphone]?.isGranted ?? false;
+    final storageGranted = statuses[Permission.storage]?.isGranted ?? false;
+    final manageStorageGranted = statuses[Permission.manageExternalStorage]?.isGranted ?? false;
+
+    if (!microphoneGranted || (!storageGranted && !manageStorageGranted)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Mikrofon ve depolama izinleri gerekli.")),
+      );
+      return false;
+    }
+    return microphoneGranted && (storageGranted || manageStorageGranted);
+  }
+
+  Future<void> startRecording() async {
+    if (!await _requestPermissions()) {
+      print("Permissions are not sufficient.");
+      return;
+    }
+
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      recordedFilePath = '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.aac';
+      await _recorder.startRecorder(toFile: recordedFilePath);
+
+      setState(() {
+        isRecording = true;
+        secondsElapsed = 0;
+      });
+
+      timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        setState(() {
+          secondsElapsed++;
+        });
+      });
+    } catch (e) {
+      print("Error starting recorder: $e");
+    }
+  }
+
+  Future<void> stopRecording() async {
+    try {
+      await _recorder.stopRecorder();
+      timer?.cancel();
+      setState(() {
+        isRecording = false;
+        isProcessing = true;
+      });
+
+      if (recordedFilePath != null) {
+        recordedFileUrl = await _uploadToFirebase(File(recordedFilePath!));
+        print("Uploaded file URL: $recordedFileUrl");
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => RecordingPage3(
+              audioPath: recordedFilePath!,
+              audioUrl: recordedFileUrl!,
+            ),
+          ),
+        );
+      } else {
+        setState(() {
+          isProcessing = false;
+        });
+      }
+    } catch (e) {
+      print("Error stopping recorder: $e");
       setState(() {
         isProcessing = false;
       });
+    }
+  }
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const RecordingPage3(),
-        ),
-      );
-    });
+  Future<String?> _uploadToFirebase(File file) async {
+    try {
+      final fileName = file.path.split('/').last;
+      final storageRef = FirebaseStorage.instance.ref().child('audio_files/$fileName');
+      final uploadTask = storageRef.putFile(file);
+
+      final snapshot = await uploadTask.whenComplete(() => null);
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print("Error uploading to Firebase: $e");
+      return null;
+    }
+  }
+
+  @override
+  void dispose() {
+    _recorder.closeRecorder();
+    timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -66,7 +157,6 @@ class _RecordAudioPage2State extends State<RecordAudioPage2> {
             const Spacer(flex: 2),
             const RecordingHeaderWidget(),
             const Spacer(flex: 2),
-            // Çember ve işlem durumu
             SizedBox(
               height: 200,
               width: 200,
@@ -74,31 +164,16 @@ class _RecordAudioPage2State extends State<RecordAudioPage2> {
                   ? Stack(
                       alignment: Alignment.center,
                       children: [
-                        const SizedBox(
-                          width: 180,
-                          height: 180,
-                          child: CircularProgressIndicator(
-                            value: 1,
-                            color: Colors.white,
-                            strokeWidth: 12,
-                          ),
-                        ),
-                        SizedBox(
-                          width: 180,
-                          height: 180,
-                          child: CircularProgressIndicator(
-                            value: (secondsElapsed % 60) / 60,
-                            color: const Color(0xFF3478F6),
-                            strokeWidth: 12,
-                          ),
+                        CircularProgressIndicator(
+                          value: (secondsElapsed % 60) / 60,
+                          color: const Color(0xFF3478F6),
+                          strokeWidth: 12,
                         ),
                         Text(
                           "${secondsElapsed ~/ 60}:${(secondsElapsed % 60).toString().padLeft(2, '0')}",
                           style: const TextStyle(
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w600,
                             fontSize: 24,
-                            color: Colors.black,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -112,35 +187,24 @@ class _RecordAudioPage2State extends State<RecordAudioPage2> {
                             ),
                             SizedBox(height: 16),
                             Text(
-                              "Record processing",
+                              "Uploading...",
                               style: TextStyle(
-                                fontFamily: 'Inter',
                                 fontWeight: FontWeight.w600,
                                 fontSize: 20,
                                 color: Colors.black,
                               ),
                             ),
-                            SizedBox(height: 8),
-                            Text(
-                              "Please wait...",
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontWeight: FontWeight.w400,
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
                           ],
                         )
-                      : const SizedBox.shrink(), // Başlangıçta boş kalır
+                      : const SizedBox.shrink(),
             ),
             const Spacer(flex: 3),
             RecordingActionWidget(
-              isRecording: isRecording,   
+              isRecording: isRecording,
               isProcessing: isProcessing,
               onStartRecording: startRecording,
               onStopRecording: stopRecording,
-              ),
+            ),
             const Spacer(flex: 2),
           ],
         ),

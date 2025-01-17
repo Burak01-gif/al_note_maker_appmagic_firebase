@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:al_note_maker_appmagic/functions/cupertinoo/show_folder_Options.dart';
 import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/empty_state_widget.dart';
@@ -14,143 +15,178 @@ import 'package:al_note_maker_appmagic/functions/cupertinoo/showOptions.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/youtube_view_widget.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final bool showDialog;
+
+  const HomePage({super.key, required this.showDialog});
 
   @override
   Widget build(BuildContext context) {
     final controller = Provider.of<HomeController>(context);
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: CustomAppBar(
-        title: 'Your Files',
-        onSettingsTap: () {
-          print("Settings tapped");
-        },
-      ),
-      body: Column(
-        children: [
-          // Arama çubuğu
-          SearchBarWidget(
-            hintText: 'Search',
-            onChanged: (value) {
-              print('Search: $value');
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: Colors.white,
+          appBar: CustomAppBar(
+            title: 'Your Files',
+            onSettingsTap: () {
+              print("Settings tapped");
             },
           ),
-          // Sekme çubuğu
-          TabBarWidget(
-            tabTitles: const ['All', 'Folders', 'Favorites', 'Youtube'],
-            selectedIndex: controller.selectedIndex,
-            onTabSelect: controller.updateSelectedIndex,
-          ),
-          // İçerik alanı
-          Expanded(
-            child: controller.selectedIndex == 1
-                ? buildFoldersView(
-                    context: context,
-                    folders: controller.folders.map((folder) => folder['name'] as String).toList(),
-                    folderNameController: TextEditingController(),
-                    onAddFolder: (folderName) async {
-                      await controller.addFolder(folderName);
-                    },
-                    onDeleteFolder: (index) async {
-                      final folderId = controller.folders[index]['id'] as String;
-                      await controller.deleteFolder(folderId);
-                    },
-                    showAddFolderDialog: ({
-                      required BuildContext context,
-                      required TextEditingController folderNameController,
-                      required Function(String folderName) onCreate,
-                    }) {
-                      showDialog(
+          body: Column(
+            children: [
+              // Arama çubuğu
+              SearchBarWidget(
+                hintText: 'Search',
+                onChanged: (value) {
+                  print('Search: $value');
+                },
+              ),
+              // Sekme çubuğu
+              TabBarWidget(
+                tabTitles: const ['All', 'Folders', 'Favorites', 'Youtube'],
+                selectedIndex: controller.selectedIndex,
+                onTabSelect: controller.updateSelectedIndex,
+              ),
+              // İçerik alanı
+              Expanded(
+                child: controller.selectedIndex == 1
+                    ? buildFoldersView(
                         context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text("Add Folder"),
-                            content: TextField(
-                              controller: folderNameController,
-                              decoration: const InputDecoration(
-                                hintText: "Folder Name",
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  final folderName = folderNameController.text.trim();
-                                  if (folderName.isNotEmpty) {
-                                    onCreate(folderName);
-                                    folderNameController.clear();
-                                  }
-                                  Navigator.pop(context);
-                                },
-                                child: const Text("Add"),
-                              ),
-                            ],
-                          );
+                        folders: controller.folders
+                            .map((folder) => folder['name'] as String)
+                            .toList(),
+                        folderNameController: TextEditingController(),
+                        onAddFolder: (folderName) async {
+                          await controller.addFolder(folderName);
                         },
-                      );
-                    },
-                    showFolderOptions: ({
-                      required BuildContext context,
-                      required String folderName,
-                      required int index,
-                      required VoidCallback onDelete,
-                    }) {
-                      final folderId = controller.folders[index]['id'] as String;
-                      showFolderOptions(
-                        context: context,
-                        folderName: folderName,
-                        index: index,
-                        onDelete: () async {
+                        onDeleteFolder: (index) async {
+                          final folderId =
+                              controller.folders[index]['id'] as String;
                           await controller.deleteFolder(folderId);
                         },
-                      );
-                    },
-                    onFolderTap: (folderName) {
-                      final folderId = controller.folders.firstWhere(
-                        (folder) => folder['name'] == folderName,
-                      )['id'] as String;
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FolderPage(
-                            folderId: folderId,
+                        showAddFolderDialog: ({
+                          required BuildContext context,
+                          required TextEditingController folderNameController,
+                          required Function(String folderName) onCreate,
+                        }) {
+                          showDialog;
+                        },
+                        showFolderOptions: ({
+                          required BuildContext context,
+                          required String folderName,
+                          required int index,
+                          required VoidCallback onDelete,
+                        }) {
+                          final folderId =
+                              controller.folders[index]['id'] as String;
+                          showFolderOptions(
+                            context: context,
                             folderName: folderName,
+                            index: index,
+                            onDelete: () async {
+                              await controller.deleteFolder(folderId);
+                            },
+                          );
+                        },
+                        onFolderTap: (folderName) {
+                          final folderId = controller.folders.firstWhere(
+                            (folder) => folder['name'] == folderName,
+                          )['id'] as String;
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FolderPage(
+                                folderId: folderId,
+                                folderName: folderName,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : controller.selectedIndex == 3
+                        ? YouTubeViewWidget()
+                        : controller.getFilteredCards().isEmpty
+                            ? EmptyStateWidget(
+                                selectedIndex: controller.selectedIndex)
+                            : ContentCardsWidget(
+                                cards: controller.getFilteredCards(),
+                                selectedIndex: controller.selectedIndex,
+                                onDelete: (index) async {
+                                  final cardId =
+                                      controller.cards[index]['id'] as String;
+                                  await controller.deleteCard(cardId);
+                                },
+                                onToggleFavorite: (index) async {
+                                  final cardId =
+                                      controller.cards[index]['id'] as String;
+                                  await controller.toggleFavorite(cardId);
+                                },
+                              ),
+              ),
+            ],
+          ),
+          bottomNavigationBar: showCreateNoteButton(
+            context,
+            () => showOptions(
+              context,
+              (String? folderId, {bool isYouTube = false}) async {
+                await controller.addCard(folderId, isYouTube: isYouTube);
+              },
+            ),
+          ),
+        ),
+
+        // Blur ve Dialog Gösterimi
+        if (showDialog)
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+            child: GestureDetector(
+              onTap: () {
+                // Blur üzerine tıklama işlemine gerek yok
+              },
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+                child: Center(
+                  child: AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    title: const Text(
+                      "Congratulations!",
+                      textAlign: TextAlign.center,
+                    ),
+                    content: const Text(
+                      "You have 50 minutes of usage!",
+                      textAlign: TextAlign.center,
+                    ),
+                    actions: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const HomePage(showDialog: false),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3478F6),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                      );
-                    },
-                  )
-                : controller.selectedIndex == 3
-                    ? YouTubeViewWidget()
-                    : controller.getFilteredCards().isEmpty
-                        ? EmptyStateWidget(selectedIndex: controller.selectedIndex)
-                        : ContentCardsWidget(
-                            cards: controller.getFilteredCards(),
-                            selectedIndex: controller.selectedIndex,
-                            onDelete: (index) async {
-                              final cardId = controller.cards[index]['id'] as String;
-                              await controller.deleteCard(cardId);
-                            },
-                            onToggleFavorite: (index) async {
-                              final cardId = controller.cards[index]['id'] as String;
-                              await controller.toggleFavorite(cardId);
-                            },
-                          ),
+                        child: const Text("Accept"),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-        ],
-      ),
-      bottomNavigationBar: showCreateNoteButton(
-  context,
-  () => showOptions(
-    context,
-    (String? folderId, {bool isYouTube = false}) async {
-      await controller.addCard(folderId, isYouTube: isYouTube);
-    },
-  ),
-),
-
+      ],
     );
   }
 }

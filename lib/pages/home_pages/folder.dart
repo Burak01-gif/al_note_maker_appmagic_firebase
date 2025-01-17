@@ -68,11 +68,11 @@ class FolderPage extends StatelessWidget {
               selectedIndex: 0,
               onDelete: (index) {
                 controller.deleteCard(
-                    controller.cards.indexOf(folderCards[index]));
+                    controller.cards.indexOf(folderCards[index]) as String);
               },
               onToggleFavorite: (index) {
                 controller.toggleFavorite(
-                    controller.cards.indexOf(folderCards[index]));
+                    controller.cards.indexOf(folderCards[index]) as String);
               },
             ),
       bottomNavigationBar: showCreateNoteButton(
@@ -81,7 +81,7 @@ class FolderPage extends StatelessWidget {
           context,
           () {
             controller.addCard(folderName);
-          },
+          } as Function(String? folderId, {bool isYouTube}),
         ),
       ),
     );
@@ -108,7 +108,7 @@ class FolderPage extends StatelessWidget {
         PopupMenuItem(
           child: const Text("Delete Folder"),
           onTap: () {
-            controller.deleteFolder(controller.folders.indexOf(folderName));
+            controller.deleteFolder(controller.folders.indexOf(folderName as Map<String, dynamic>) as String);
             Navigator.pop(context);
           },
         ),

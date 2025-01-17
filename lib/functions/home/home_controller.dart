@@ -8,6 +8,7 @@ class HomeController extends ChangeNotifier {
   final List<Map<String, dynamic>> _folders = [];
   int _selectedIndex = 0;
   String? _userId;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   List<Map<String, dynamic>> get cards => List.unmodifiable(_cards);
   List<Map<String, dynamic>> get folders => List.unmodifiable(_folders);
@@ -41,6 +42,19 @@ class HomeController extends ChangeNotifier {
 
     _userId = storedUserId;
     notifyListeners();
+  }
+
+  /// Kullanıcı durumunu kontrol et
+  Future<bool> checkUserStatus() async {
+    if (_userId == null) await _initializeUserId();
+
+    try {
+      final doc = await firestore.collection('users').doc(_userId).get();
+      return doc.exists;
+    } catch (e) {
+      print("Firestore kullanıcı durumu kontrol hatası: $e");
+      return false;
+    }
   }
 
 /// Klasörleri gerçek zamanlı dinler
@@ -152,9 +166,6 @@ Future<void> addCard(String? folderId, {bool isYouTube = false}) async {
   }
 }
 
-
-
-
 Future<void> addFolder(String folderName) async {
   if (_userId == null) return;
 
@@ -176,9 +187,6 @@ Future<void> addFolder(String folderName) async {
     print("Failed to add folder: $e");
   }
 }
-
-
-
 
   /// Klasörü ve ilişkili kartları siler
   Future<void> deleteFolder(String folderId) async {
@@ -254,6 +262,8 @@ Future<void> addFolder(String folderName) async {
     _selectedIndex = index;
     notifyListeners();
   }
+
+  void updateFolderCards(String folderName, List<Map<String, dynamic>> folderCards) {}
 
   
 }
