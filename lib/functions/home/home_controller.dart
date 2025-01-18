@@ -99,6 +99,7 @@ void _listenToCards() {
         'title': data['title'],
         'isFavorite': data['isFavorite'],
         'folderId': data['folderId'],
+        'type': data['type'] ?? 'audio', // Default olarak 'audio'
         'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
         'deviceId': data['deviceId'],
       });
@@ -108,63 +109,39 @@ void _listenToCards() {
 }
 
 
+
  /// Yeni bir kart ekler
 Future<void> addCard(String? folderId, {bool isYouTube = false}) async {
-  print("addCard called with folderId: $folderId, isYouTube: $isYouTube");
+  if (_userId == null) return;
 
-  if (_userId == null) {
-    print("User ID is null. Cannot add card.");
-    return;
-  }
-
-  String title;
-  String type;
-
-  if (isYouTube) {
-    title = "YouTube Import";
-    type = "youtube"; // YouTube türü
-  } else {
-    title = folderId == null ? "New Note" : "New Note in Folder";
-    type = "audio"; // Ses türü
-  }
-
-  // Eğer folderId varsa hangi folder'a eklendiğini logla
-  if (folderId != null) {
-    print("This card will be added to the folder with ID: $folderId");
-  } else {
-    print("This card is not associated with any folder (it is independent).");
-  }
-
-  print("Preparing to add card with title: $title, type: $type");
+  String title = isYouTube ? "YouTube Import" : "New Note";
+  String type = isYouTube ? "youtube" : "audio";
 
   try {
     final docRef = await FirebaseFirestore.instance.collection('cards').add({
       'deviceId': _userId,
       'title': title,
+      'type': type, // Type alanı doğru gönderiliyor
       'isFavorite': false,
       'folderId': folderId,
-      'type': type,
       'createdAt': FieldValue.serverTimestamp(),
     });
-
-    print("Card added to Firestore with ID: ${docRef.id}");
 
     _cards.add({
       'id': docRef.id,
       'title': title,
+      'type': type, // Type doğru şekilde ekleniyor
       'isFavorite': false,
       'folderId': folderId,
-      'type': type,
       'deviceId': _userId,
       'createdAt': DateTime.now(),
     });
-
-    print("Card added to local _cards list: ${_cards.last}");
     notifyListeners();
   } catch (e) {
     print("Failed to add card: $e");
   }
 }
+
 
 Future<void> addFolder(String folderName) async {
   if (_userId == null) return;
@@ -246,16 +223,19 @@ Future<void> addFolder(String folderName) async {
     }
   }
 
-  /// Filtrelenmiş kartları döndürür
   List<Map<String, dynamic>> getFilteredCards() {
-    if (_selectedIndex == 2) {
-      return _cards.where((card) => card['isFavorite'] == true).toList();
-    } else if (_selectedIndex == 1) {
-      return _cards.where((card) => card['folderId'] != null).toList();
-    } else {
-      return _cards;
-    }
+  if (_selectedIndex == 2) {
+    // Favoriler
+    return _cards.where((card) => card['isFavorite'] == true).toList();
+  } else if (_selectedIndex == 3) {
+    // YouTube
+    return _cards.where((card) => card['type'] == 'youtube').toList();
+  } else {
+    // Tüm kartlar
+    return _cards;
   }
+}
+
 
   /// Sekme indeksini günceller
   void updateSelectedIndex(int index) {

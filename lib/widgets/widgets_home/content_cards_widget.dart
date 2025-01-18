@@ -60,6 +60,7 @@ class ContentCardsWidget extends StatelessWidget {
                 itemCount: cards.length,
                 itemBuilder: (context, index) {
                   final card = cards[index];
+                  print("Card Data: $card");
                   final createdDate = card['createdAt'] != null
                       ? DateFormat('EEEE h:mm a')
                           .format(card['createdAt'] as DateTime)
@@ -67,25 +68,26 @@ class ContentCardsWidget extends StatelessWidget {
 
                   return GestureDetector(
                     onTap: () {
-                      if (card['type'] == 'youtube') {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const YouTubePage(),
-                          ),
-                        );
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RecordingPage1(
-                              title: card['title'] ?? 'Untitled Note',
-                              folderName: card['folderName'] ?? 'All',
-                            ),
-                          ),
-                        );
-                      }
-                    },
+  if ((card['type'] ?? 'audio') == 'youtube') {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const YouTubePage(),
+      ),
+    );
+  } else {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RecordingPage1(
+          title: card['title'] ?? 'Untitled Note',
+          folderName: card['folderName'] ?? 'All',
+        ),
+      ),
+    );
+  }
+},
+
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Column(
@@ -113,14 +115,15 @@ class ContentCardsWidget extends StatelessWidget {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Icon(
-                                        card['type'] == 'youtube'
-                                            ? Icons.video_library
-                                            : Icons.mic,
-                                        size: 28.0,
-                                        color: card['type'] == 'youtube'
-                                            ? Colors.red
-                                            : const Color(0xFF5584EC),
-                                      ),
+  (card['type'] ?? 'audio') == 'youtube'
+      ? Icons.video_library
+      : Icons.mic,
+  size: 28.0,
+  color: (card['type'] ?? 'audio') == 'youtube'
+      ? Colors.red
+      : const Color(0xFF5584EC),
+),
+
                                       const SizedBox(height: 8),
                                       Text(
                                         card['title'] ?? 'Untitled Note',
