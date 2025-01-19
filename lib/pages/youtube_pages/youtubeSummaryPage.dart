@@ -1,3 +1,4 @@
+import 'package:al_note_maker_appmagic/pages/home_pages/home.dart';
 import 'package:flutter/material.dart';
 
 // YouTubeSummaryPage Class
@@ -25,7 +26,11 @@ class YouTubeSummaryPage extends StatelessWidget {
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.black),
           onPressed: () {
-            Navigator.pop(context);
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage(showDialog: false)),
+              (Route<dynamic> route) => false, // Stack'i temizleyerek sadece HomePage kalsın
+            );
           },
         ),
         title: Text(

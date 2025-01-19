@@ -108,10 +108,7 @@ void _listenToCards() {
   });
 }
 
-
-
- /// Yeni bir kart ekler
-Future<void> addCard(String? folderId, {bool isYouTube = false}) async {
+ Future<void> addCard(String? folderId, {bool isYouTube = false}) async {
   if (_userId == null) return;
 
   String title = isYouTube ? "YouTube Import" : "New Note";
@@ -121,17 +118,26 @@ Future<void> addCard(String? folderId, {bool isYouTube = false}) async {
     final docRef = await FirebaseFirestore.instance.collection('cards').add({
       'deviceId': _userId,
       'title': title,
-      'type': type, // Type alanı doğru gönderiliyor
+      'type': type,
       'isFavorite': false,
+      'isGenerated': false,  // Kullanıcı özet oluşturana kadar false
       'folderId': folderId,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    await docRef.collection('summaries').doc('default_summary').set({
+      'title': null,
+      'summary': null,
+      'transcript': null,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
     _cards.add({
       'id': docRef.id,
       'title': title,
-      'type': type, // Type doğru şekilde ekleniyor
+      'type': type,
       'isFavorite': false,
+      'isGenerated': false,
       'folderId': folderId,
       'deviceId': _userId,
       'createdAt': DateTime.now(),
@@ -141,6 +147,65 @@ Future<void> addCard(String? folderId, {bool isYouTube = false}) async {
     print("Failed to add card: $e");
   }
 }
+
+Future<void> markCardAsGenerated(String cardId) async {
+  try {
+    await FirebaseFirestore.instance.collection('cards').doc(cardId).update({
+      'isGenerated': true,
+    });
+    _cards.firstWhere((card) => card['id'] == cardId)['isGenerated'] = true;
+    notifyListeners();
+  } catch (e) {
+    print("Failed to mark card as generated: $e");
+  }
+}
+
+Future<Map<String, dynamic>?> getCardDetailsWithStatus(String cardId) async {
+  try {
+    // Firestore'dan kart verisini al
+    DocumentSnapshot cardSnapshot = await FirebaseFirestore.instance
+        .collection('cards')
+        .doc(cardId)
+        .get();
+
+    if (!cardSnapshot.exists) {
+      return null;
+    }
+
+    final cardData = cardSnapshot.data() as Map<String, dynamic>;
+
+    // Kartın isGenerated durumunu kontrol et
+    bool isGenerated = cardData['isGenerated'] ?? false;
+
+    // Kartın özet verisini al
+    var summarySnapshot = await FirebaseFirestore.instance
+        .collection('cards')
+        .doc(cardId)
+        .collection('summaries')
+        .doc('default_summary')
+        .get();
+
+    if (!summarySnapshot.exists) {
+      return null;
+    }
+
+    final summaryData = summarySnapshot.data() as Map<String, dynamic>;
+
+    return {
+      'isGenerated': isGenerated,
+      'title': summaryData['title'] ?? '',
+      'summary': summaryData['summary'] ?? '',
+      'transcript': summaryData['transcript'] ?? '',
+    };
+  } catch (e) {
+    print("Error fetching card details with status: $e");
+    return null;
+  }
+}
+
+
+
+
 
 
 Future<void> addFolder(String folderName) async {
@@ -236,7 +301,6 @@ Future<void> addFolder(String folderName) async {
   }
 }
 
-
   /// Sekme indeksini günceller
   void updateSelectedIndex(int index) {
     _selectedIndex = index;
@@ -244,6 +308,67 @@ Future<void> addFolder(String folderName) async {
   }
 
   void updateFolderCards(String folderName, List<Map<String, dynamic>> folderCards) {}
+
+  Future<void> saveCardDetails(String cardId, String title, String summary, String transcript) async {
+  try {
+    await FirebaseFirestore.instance
+        .collection('cards')
+        .doc(cardId)
+        .collection('summaries')
+        .add({
+      'title': title,
+      'summary': summary,
+      'transcript': transcript,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    print("Card details saved successfully.");
+  } catch (e) {
+    print("Error saving card details: $e");
+  }
+  }
+
+  Future<Map<String, dynamic>?> getCardDetails(String cardId) async {
+  try {
+    var snapshot = await FirebaseFirestore.instance
+        .collection('cards')
+        .doc(cardId)
+        .collection('summaries')
+        .orderBy('createdAt', descending: true)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      return snapshot.docs.first.data();
+    } else {
+      return null;
+    }
+  } catch (e) {
+    print("Error fetching card details: $e");
+    return null;
+  }
+  }
+
+  Future<void> updateCardSummary(String cardId, String title, String summary, String transcript) async {
+  try {
+    await FirebaseFirestore.instance
+        .collection('cards')
+        .doc(cardId)
+        .collection('summaries')
+        .doc('default_summary')
+        .update({
+      'title': title,
+      'summary': summary,
+      'transcript': transcript,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    print("Card summary updated successfully.");
+  } catch (e) {
+    print("Error updating card summary: $e");
+  }
+}
+
 
   
 }

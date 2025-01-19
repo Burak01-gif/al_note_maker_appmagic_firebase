@@ -1,8 +1,9 @@
 import 'dart:ui';
-import 'package:al_note_maker_appmagic/functions/cupertinoo/show_folder_Options.dart';
+import 'package:al_note_maker_appmagic/cupertinoo/show_add_folder_dialog.dart';
+import 'package:al_note_maker_appmagic/cupertinoo/show_folder_Options.dart';
 import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/empty_state_widget.dart';
-import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/widget_home_folder.dart';
+import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/buildFoldersView.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:al_note_maker_appmagic/pages/folder_pages/folder.dart';
@@ -11,7 +12,7 @@ import 'package:al_note_maker_appmagic/widgets/widgets_home/tab_bar_widget.dart'
 import 'package:al_note_maker_appmagic/widgets/widgets_home/content_cards_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/show_create_note_button.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/search_bar_widget.dart';
-import 'package:al_note_maker_appmagic/functions/cupertinoo/showOptions.dart';
+import 'package:al_note_maker_appmagic/cupertinoo/showOptions.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/youtube_view_widget.dart';
 
 class HomePage extends StatelessWidget {
@@ -70,7 +71,11 @@ class HomePage extends StatelessWidget {
                           required TextEditingController folderNameController,
                           required Function(String folderName) onCreate,
                         }) {
-                          showDialog;
+                          showAddFolderDialog(
+                            context: context,
+                            folderNameController: folderNameController,
+                            onCreate: onCreate,
+                          );
                         },
                         showFolderOptions: ({
                           required BuildContext context,

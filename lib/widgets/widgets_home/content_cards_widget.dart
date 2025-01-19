@@ -1,7 +1,10 @@
+import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
 import 'package:al_note_maker_appmagic/pages/recording_pages/recording_pages1.dart';
 import 'package:al_note_maker_appmagic/pages/youtube_pages/youtube.dart';
+import 'package:al_note_maker_appmagic/pages/youtube_pages/youtubeSummaryPage.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class ContentCardsWidget extends StatelessWidget {
   final List<Map<String, dynamic>> cards;
@@ -67,26 +70,47 @@ class ContentCardsWidget extends StatelessWidget {
                       : 'Unknown Time';
 
                   return GestureDetector(
-                    onTap: () {
-  if ((card['type'] ?? 'audio') == 'youtube') {
+onTap: () async {
+  final cardId = card['id'];
+  final controller = Provider.of<HomeController>(context, listen: false);
+
+  final cardDetails = await controller.getCardDetailsWithStatus(cardId);
+
+  if (cardDetails != null && cardDetails['isGenerated'] == true) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const YouTubePage(),
-      ),
-    );
-  } else {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RecordingPage1(
-          title: card['title'] ?? 'Untitled Note',
-          folderName: card['folderName'] ?? 'All',
+        builder: (context) => YouTubeSummaryPage(
+          title: cardDetails['title'] ?? 'No Title',
+          timestamp: DateTime.now().toString(),
+          summary: cardDetails['summary'] ?? 'No Summary Available',
+          transcript: cardDetails['transcript'] ?? 'No Transcript Available',
         ),
       ),
     );
+  } else {
+    if ((card['type'] ?? 'audio') == 'youtube') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => YouTubePage(cardId: cardId),
+        ),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RecordingPage1(
+            title: card['title'] ?? 'Untitled Note',
+            folderName: card['folderName'] ?? 'All',
+          ),
+        ),
+      );
+    }
   }
 },
+
+
 
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),

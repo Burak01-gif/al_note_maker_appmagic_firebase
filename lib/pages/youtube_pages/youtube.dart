@@ -1,3 +1,4 @@
+import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
 import 'package:al_note_maker_appmagic/pages/youtube_pages/youtubeSummaryPage.dart';
 import 'package:al_note_maker_appmagic/services/api_services.dart';
 import 'package:al_note_maker_appmagic/widgets/youtube_widgets/continue_button.dart';
@@ -5,9 +6,12 @@ import 'package:al_note_maker_appmagic/widgets/youtube_widgets/loading_overlay.d
 import 'package:al_note_maker_appmagic/widgets/youtube_widgets/note_language_selector.dart';
 import 'package:al_note_maker_appmagic/widgets/youtube_widgets/youtube_url_input.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class YouTubePage extends StatefulWidget {
-  const YouTubePage({super.key});
+  final String cardId; // Kartın Firestore ID'si
+
+  const YouTubePage({super.key, required this.cardId});
 
   @override
   State<YouTubePage> createState() => _YouTubePageState();
@@ -20,12 +24,11 @@ class _YouTubePageState extends State<YouTubePage> {
   String loadingMessage = "Loading YouTube video"; // Yükleme mesajı
 
   void showLanguageMenu(BuildContext context, Offset position) async {
-    // Dil seçim menüsü
+    // Dil seçim menüsü fonksiyonu buraya gelebilir.
   }
 
   Future<void> handleContinue() async {
     if (youtubeUrl.isEmpty) {
-      // Eğer URL girilmemişse, kullanıcıya mesaj göster
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please enter a valid YouTube URL")),
       );
@@ -38,7 +41,7 @@ class _YouTubePageState extends State<YouTubePage> {
     });
 
     try {
-      final apiService = ApiService(); // API servis çağrısı
+      final apiService = ApiService(); // API servisini başlat
       final triggerId = await apiService.triggerWorkflow(
         youtubeUrl,
         selectedLanguage,
@@ -52,20 +55,30 @@ class _YouTubePageState extends State<YouTubePage> {
 
       final result = await apiService.pollExecutionStatus(triggerId);
 
-      // İşlem başarılıysa YouTubeSummaryPage'e yönlendir
+      // Firestore'da kartın isGenerated durumunu güncelle
+      final homeController = Provider.of<HomeController>(context, listen: false);
+      await homeController.markCardAsGenerated(widget.cardId);
+
+      // Firestore'daki kartın summary bölümünü güncelle
+      await homeController.updateCardSummary(
+        widget.cardId,
+        result['flow_name'] ?? 'Generated Title',
+        result['step_results']?[1]['output'] ?? 'No Summary Available',
+        result['step_results']?[0]['output'] ?? 'No Transcript Available',
+      );
+
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => YouTubeSummaryPage(
             title: result['flow_name'] ?? 'Generated Title',
-            timestamp: result['parameters']?[1]['value'] ?? 'No Timestamp',
+            timestamp: DateTime.now().toString(),
             summary: result['step_results']?[1]['output'] ?? 'No Summary Available',
             transcript: result['step_results']?[0]['output'] ?? 'No Transcript Available',
           ),
         ),
       );
     } catch (e) {
-      // Hata varsa kullanıcıya mesaj göster
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
@@ -134,7 +147,7 @@ class _YouTubePageState extends State<YouTubePage> {
                 ),
                 const Spacer(),
                 // Devam Butonu
-                ContinueButton(onPressed: handleContinue),
+                ContinueButton(onPressed: () => handleContinue()),
               ],
             ),
           ),
