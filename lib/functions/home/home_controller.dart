@@ -120,8 +120,8 @@ void _listenToCards() {
       'title': title,
       'type': type,
       'isFavorite': false,
-      'isGenerated': false,  // Kullanıcı özet oluşturana kadar false
-      'folderId': folderId,
+      'isGenerated': false,  
+      'folderId': folderId ?? '',  // folderId null ise boş string olarak kaydet
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -138,15 +138,35 @@ void _listenToCards() {
       'type': type,
       'isFavorite': false,
       'isGenerated': false,
-      'folderId': folderId,
+      'folderId': folderId ?? '',
       'deviceId': _userId,
       'createdAt': DateTime.now(),
     });
+    
     notifyListeners();
+    print("Card added successfully with ID: ${docRef.id}");
   } catch (e) {
     print("Failed to add card: $e");
   }
 }
+
+Future<void> addCardWithVerification(String? folderId, {bool isYouTube = false}) async {
+  await addCard(folderId, isYouTube: isYouTube);
+
+  final snapshot = await FirebaseFirestore.instance.collection('cards')
+      .where('deviceId', isEqualTo: _userId)
+      .orderBy('createdAt', descending: true)
+      .limit(1)
+      .get();
+
+  if (snapshot.docs.isNotEmpty) {
+    print("Successfully verified card in Firestore: ${snapshot.docs.first.data()}");
+  } else {
+    print("Failed to verify card in Firestore");
+  }
+}
+
+
 
 Future<void> markCardAsGenerated(String cardId) async {
   try {
@@ -349,19 +369,19 @@ Future<void> addFolder(String folderName) async {
   }
   }
 
-  Future<void> updateCardSummary(String cardId, String title, String summary, String transcript) async {
+ Future<void> updateCardSummary(String cardId, String? title, String? summary, String? transcript) async {
   try {
     await FirebaseFirestore.instance
         .collection('cards')
         .doc(cardId)
         .collection('summaries')
         .doc('default_summary')
-        .update({
-      'title': title,
-      'summary': summary,
-      'transcript': transcript,
+        .set({
+      'title': title?.isNotEmpty == true ? title : 'No Title',
+      'summary': summary?.isNotEmpty == true ? summary : 'No Summary Available',
+      'transcript': transcript?.isNotEmpty == true ? transcript : 'No Transcript Available',
       'updatedAt': FieldValue.serverTimestamp(),
-    });
+    }, SetOptions(merge: true));
 
     print("Card summary updated successfully.");
   } catch (e) {

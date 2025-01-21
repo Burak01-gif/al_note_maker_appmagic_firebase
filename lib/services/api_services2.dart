@@ -104,7 +104,7 @@ class ApiService2 {
   Future<Map<String, dynamic>> pollExecutionStatus(
     String triggerId, {
     int interval = 2,
-    int timeout = 60,
+    int timeout = 200,
   }) async {
     Map<String, dynamic>? executionResult;
 

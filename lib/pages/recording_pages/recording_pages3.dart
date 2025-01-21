@@ -1,5 +1,7 @@
 import 'package:al_note_maker_appmagic/pages/recording_pages/recording_summary__pange.dart';
+import 'package:al_note_maker_appmagic/pages/recording_pages/sumaarypages.dart';
 import 'package:al_note_maker_appmagic/services/api_services2.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -262,8 +264,13 @@ class _RecordingPage3State extends State<RecordingPage3> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: ElevatedButton(
-                  onPressed: () async {
+onPressed: () async {
   final apiService = ApiService2();
+  FirebaseFirestore.instance.collection('cards').snapshots().listen((querySnapshot) {
+  for (var doc in querySnapshot.docs) {
+    print("Card Data: ${doc.data()}");
+  }
+});
 
   showDialog(
     context: context,
@@ -285,11 +292,12 @@ class _RecordingPage3State extends State<RecordingPage3> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => RecordingSummaryPage(
+        builder: (context) => SummaryPage(
           title: result['title'] ?? 'Generated Title',
           timestamp: result['timestamp'] ?? 'No Timestamp Available',
           summary: result['summary'] ?? 'No Summary Available',
           transcript: result['transcript'] ?? 'No Transcript Available',
+          type: 'audio',
         ),
       ),
     );
