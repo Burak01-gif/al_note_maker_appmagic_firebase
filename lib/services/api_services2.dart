@@ -20,8 +20,8 @@ class ApiService2 {
       'parameters': {
         'url': audioUrl,
         'language': language,
-        'summarize_rules': summarizeRules,
-        'output_format': outputFormat,
+        'rules': summarizeRules,
+        'output': outputFormat,
       },
       'webhook_url': '',
     };
@@ -59,7 +59,7 @@ class ApiService2 {
       return null;
     }
   }
-
+  
   /// Belirtilen `trigger_id` ile iş akışının durumunu kontrol eder.
   Future<Map<String, dynamic>?> getExecutionStatus(String triggerId) async {
   final String getUrl = '$getApiUrl$triggerId';
@@ -98,7 +98,6 @@ class ApiService2 {
     return null;
   }
 }
-
 
   /// İş akışının durumunu düzenli aralıklarla kontrol eder (polling).
   Future<Map<String, dynamic>> pollExecutionStatus(
@@ -173,22 +172,34 @@ class ApiService2 {
   }
 
   final result = await pollExecutionStatus(triggerId);
+  print("Full API Response: ${jsonEncode(result)}");  // API'den dönen sonucu detaylı görmek için
 
   if (result.containsKey('step_results')) {
     final stepResults = result['step_results'] as List<dynamic>;
 
-    // İlk adımı al
-    final firstStep = stepResults.firstWhere(
+    // Transkripsiyon aşamasını kontrol et
+    final transcriptionStep = stepResults.firstWhere(
       (step) => step['step_name'] == 'Incredibly Fast Fhisper',
       orElse: () => null,
     );
 
-    if (firstStep != null && firstStep['status'] == 'succeeded') {
+    // Özetleme aşamasını kontrol et
+    final summarizationStep = stepResults.firstWhere(
+      (step) => step['step_name'] == 'ChatGPT',
+      orElse: () => null,
+    );
+
+    if (transcriptionStep != null && transcriptionStep['status'] == 'succeeded' &&
+        summarizationStep != null && summarizationStep['status'] == 'succeeded') {
+      
+      final transcript = transcriptionStep['output']?.replaceAll(RegExp(r'^"|"$'), '') ?? 'No Transcript Available';
+      final summary = summarizationStep['output']?.replaceAll(RegExp(r'^"|"$'), '') ?? 'No Summary Available';
+
       return {
         'title': result['flow_name'] ?? 'Generated Title',
         'timestamp': '',
-        'summary': firstStep['output']?.replaceAll(RegExp(r'^"|"$'), '') ?? 'No Summary Available',
-        'transcript': '',
+        'summary': summary,
+        'transcript': transcript,
       };
     } else {
       throw Exception('No valid step results found.');

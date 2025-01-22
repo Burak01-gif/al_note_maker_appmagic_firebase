@@ -64,80 +64,89 @@ class _RecordAudioPage2State extends State<RecordAudioPage2> {
   }
 
   Future<void> startRecording() async {
-    if (!await _requestPermissions()) {
-      print("Permissions are not sufficient.");
-      return;
-    }
-
-    try {
-      final directory = await getApplicationDocumentsDirectory();
-      recordedFilePath = '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.aac';
-      await _recorder.startRecorder(toFile: recordedFilePath);
-
-      setState(() {
-        isRecording = true;
-        secondsElapsed = 0;
-      });
-
-      timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        setState(() {
-          secondsElapsed++;
-        });
-      });
-    } catch (e) {
-      print("Error starting recorder: $e");
-    }
+  if (!await _requestPermissions()) {
+    print("Permissions are not sufficient.");
+    return;
   }
 
-  Future<void> stopRecording() async {
-    try {
-      await _recorder.stopRecorder();
-      timer?.cancel();
+  try {
+    final directory = await getApplicationDocumentsDirectory();
+    recordedFilePath = '${directory.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+    await _recorder.startRecorder(
+      toFile: recordedFilePath,
+      codec: Codec.aacMP4,  // m4a formatı için uygun codec
+    );
+
+    setState(() {
+      isRecording = true;
+      secondsElapsed = 0;
+    });
+
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        isRecording = false;
-        isProcessing = true;
+        secondsElapsed++;
       });
+    });
+  } catch (e) {
+    print("Error starting recorder: $e");
+  }
+}
 
-      if (recordedFilePath != null) {
-        recordedFileUrl = await _uploadToFirebase(File(recordedFilePath!));
-        print("Uploaded file URL: $recordedFileUrl");
+Future<void> stopRecording() async {
+  try {
+    await _recorder.stopRecorder();
+    timer?.cancel();
+    setState(() {
+      isRecording = false;
+      isProcessing = true;
+    });
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => RecordingPage3(
-              audioPath: recordedFilePath!,
-              audioUrl: recordedFileUrl!,
-            ),
+    if (recordedFilePath != null) {
+      recordedFileUrl = await _uploadToFirebase(File(recordedFilePath!));
+      print("Uploaded file URL: $recordedFileUrl");
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RecordingPage3(
+            audioPath: recordedFilePath!,
+            audioUrl: recordedFileUrl!,
           ),
-        );
-      } else {
-        setState(() {
-          isProcessing = false;
-        });
-      }
-    } catch (e) {
-      print("Error stopping recorder: $e");
+        ),
+      );
+    } else {
       setState(() {
         isProcessing = false;
       });
     }
+  } catch (e) {
+    print("Error stopping recorder: $e");
+    setState(() {
+      isProcessing = false;
+    });
   }
+}
 
-  Future<String?> _uploadToFirebase(File file) async {
-    try {
-      final fileName = file.path.split('/').last;
-      final storageRef = FirebaseStorage.instance.ref().child('audio_files/$fileName');
-      final uploadTask = storageRef.putFile(file);
+Future<String?> _uploadToFirebase(File file) async {
+  try {
+    final fileName = file.path.split('/').last;
+    final storageRef = FirebaseStorage.instance.ref().child('audio_files/$fileName');
 
-      final snapshot = await uploadTask.whenComplete(() => null);
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
-    } catch (e) {
-      print("Error uploading to Firebase: $e");
-      return null;
-    }
+    final uploadTask = storageRef.putFile(
+      file,
+      SettableMetadata(contentType: 'audio/mp4'),  // M4A için MIME türü
+    );
+
+    final snapshot = await uploadTask.whenComplete(() => null);
+    final downloadUrl = await snapshot.ref.getDownloadURL();
+    return downloadUrl;
+  } catch (e) {
+    print("Error uploading to Firebase: $e");
+    return null;
   }
+}
+
 
   @override
   void dispose() {

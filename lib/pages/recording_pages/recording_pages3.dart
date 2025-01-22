@@ -1,4 +1,3 @@
-import 'package:al_note_maker_appmagic/pages/recording_pages/recording_summary__pange.dart';
 import 'package:al_note_maker_appmagic/pages/recording_pages/sumaarypages.dart';
 import 'package:al_note_maker_appmagic/services/api_services2.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -29,52 +28,54 @@ class _RecordingPage3State extends State<RecordingPage3> {
   }
 
   Future<void> _initializeAudio() async {
-    try {
-      // Yerel cihazda bulunan ses dosyasını yükle
-      await _audioPlayer.setSourceDeviceFile(widget.audioPath);
-      print("Audio source set successfully.");
+  try {
+    // Yerel cihazda bulunan ses dosyasını yükle
+    String formattedPath = widget.audioPath.replaceAll('.aac', '.m4a');
+    await _audioPlayer.setSourceDeviceFile(formattedPath);
+    print("Audio source set successfully.");
 
-      // Toplam süreyi manuel olarak ayarla
-      final duration = await _audioPlayer.getDuration();
-      if (duration != null) {
-        setState(() {
-          totalDuration = duration;
-        });
-      }
-
-      // Toplam süre değişikliğini dinle
-      _audioPlayer.onDurationChanged.listen((duration) {
-        print("Duration changed: ${duration.inMilliseconds} ms");
-        setState(() {
-          totalDuration = duration;
-        });
+    // Toplam süreyi manuel olarak ayarla
+    final duration = await _audioPlayer.getDuration();
+    if (duration != null) {
+      setState(() {
+        totalDuration = duration;
       });
-
-      // Çalma pozisyonu değişikliğini dinle
-      _audioPlayer.onPositionChanged.listen((position) {
-        print("Position changed: ${position.inMilliseconds} ms");
-        setState(() {
-          currentDuration = position;
-          playbackPosition = _sliderSync(position, totalDuration);
-        });
-      });
-
-      // Çalma tamamlanma olayını dinle
-      _audioPlayer.onPlayerComplete.listen((_) async {
-        print("Playback completed.");
-        setState(() {
-          isPlaying = false;
-          playbackPosition = 0.0;
-          currentDuration = Duration.zero;
-        });
-        // Kaydı tekrar oynatmaya hazır hale getirmek için kaynak durumunu sıfırla
-        await _audioPlayer.stop(); // Çalma durumunu sıfırla
-        await _audioPlayer.setSourceDeviceFile(widget.audioPath); // Kaynağı yeniden yükle
-      });
-    } catch (e) {
-      print("Error initializing audio: $e");
     }
+
+    // Toplam süre değişikliğini dinle
+    _audioPlayer.onDurationChanged.listen((duration) {
+      print("Duration changed: ${duration.inMilliseconds} ms");
+      setState(() {
+        totalDuration = duration;
+      });
+    });
+
+    // Çalma pozisyonu değişikliğini dinle
+    _audioPlayer.onPositionChanged.listen((position) {
+      print("Position changed: ${position.inMilliseconds} ms");
+      setState(() {
+        currentDuration = position;
+        playbackPosition = _sliderSync(position, totalDuration);
+      });
+    });
+
+    // Çalma tamamlanma olayını dinle
+    _audioPlayer.onPlayerComplete.listen((_) async {
+      print("Playback completed.");
+      setState(() {
+        isPlaying = false;
+        playbackPosition = 0.0;
+        currentDuration = Duration.zero;
+      });
+      // Kaydı tekrar oynatmaya hazır hale getirmek için kaynak durumunu sıfırla
+      await _audioPlayer.stop(); // Çalma durumunu sıfırla
+      await _audioPlayer.setSourceDeviceFile(formattedPath); // Kaynağı yeniden yükle
+    });
+  } catch (e) {
+    print("Error initializing audio: $e");
   }
+}
+
 
   void togglePlayPause() async {
     if (isPlaying) {
@@ -266,11 +267,6 @@ class _RecordingPage3State extends State<RecordingPage3> {
                 child: ElevatedButton(
 onPressed: () async {
   final apiService = ApiService2();
-  FirebaseFirestore.instance.collection('cards').snapshots().listen((querySnapshot) {
-  for (var doc in querySnapshot.docs) {
-    print("Card Data: ${doc.data()}");
-  }
-});
 
   showDialog(
     context: context,
@@ -288,6 +284,19 @@ onPressed: () async {
     );
 
     Navigator.pop(context); // Progress barı kapat
+
+    // Firebase Firestore'a veriyi kaydetme işlemi
+    await FirebaseFirestore.instance.collection('summaries').add({
+      'title': result['title'] ?? 'Generated Title',
+      'timestamp': result['timestamp'] ?? 'No Timestamp Available',
+      'summary': result['summary'] ?? 'No Summary Available',
+      'transcript': result['transcript'] ?? 'No Transcript Available',
+      'createdAt': FieldValue.serverTimestamp(),
+      'type': 'audio',
+      'audioUrl': widget.audioUrl, // Ses dosyasının URL'si de kaydediliyor
+    });
+
+    print("Summary successfully saved to Firestore!");
 
     Navigator.push(
       context,

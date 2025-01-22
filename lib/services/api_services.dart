@@ -28,12 +28,12 @@ class ApiService {
           'X-API-Key': apiKey,
           'Content-Type': 'application/json',
         },
-        body: jsonEncode(requestBody),
-        
+        body: jsonEncode(requestBody),        
       );
 
       print("Response status code: ${response.statusCode}");
       print("Response body: ${response.body}");
+      
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data.containsKey('trigger_id')) {
