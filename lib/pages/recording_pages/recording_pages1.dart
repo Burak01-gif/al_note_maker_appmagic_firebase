@@ -2,7 +2,16 @@ import 'package:al_note_maker_appmagic/pages/recording_pages/recording_pages2.da
 import 'package:flutter/material.dart';
 
 class RecordingPage1 extends StatelessWidget {
-  const RecordingPage1({super.key, required title, required folderName});
+  final String title;
+  final String folderName;
+  final String cardId;  // Kart ID'si Firestore'dan gelen
+
+  const RecordingPage1({
+    super.key,
+    required this.title,
+    required this.folderName,
+    required this.cardId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +54,6 @@ class RecordingPage1 extends StatelessWidget {
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () {
-                // Açılır menü veya dil seçimi burada olacak
                 print("Language selection tapped");
               },
               child: Container(
@@ -75,14 +83,16 @@ class RecordingPage1 extends StatelessWidget {
             SizedBox(
               height: 60,
               child: ElevatedButton(
-onPressed: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const RecordAudioPage2(),
-    ),
-  );
-},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RecordAudioPage2(
+                        cardId: cardId, // Burada kart ID'sini geçiriyoruz
+                      ),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF3478F6),
                   shape: RoundedRectangleBorder(

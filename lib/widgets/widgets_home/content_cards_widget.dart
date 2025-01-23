@@ -1,5 +1,6 @@
 import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
 import 'package:al_note_maker_appmagic/pages/recording_pages/recording_pages1.dart';
+import 'package:al_note_maker_appmagic/pages/recording_pages/sumaarypages.dart';
 import 'package:al_note_maker_appmagic/pages/youtube_pages/youtube.dart';
 import 'package:al_note_maker_appmagic/pages/youtube_pages/youtubeSummaryPage.dart';
 import 'package:flutter/material.dart';
@@ -77,32 +78,50 @@ onTap: () async {
   final cardDetails = await controller.getCardDetailsWithStatus(cardId);
 
   if (cardDetails != null && cardDetails['isGenerated'] == true) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => YouTubeSummaryPage(
-          title: cardDetails['title'] ?? 'No Title',
-          timestamp: DateTime.now().toString(),
-          summary: cardDetails['summary'] ?? 'No Summary Available',
-          transcript: cardDetails['transcript'] ?? 'No Transcript Available',
+    // Eğer kart daha önce işlendi ise doğru özet sayfasına yönlendir
+    if (card['type'] == 'youtube') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => YouTubeSummaryPage(
+            title: cardDetails['title'] ?? 'No Title',
+            timestamp: DateTime.now().toString(),
+            summary: cardDetails['summary'] ?? 'No Summary Available',
+            transcript: cardDetails['transcript'] ?? 'No Transcript Available',
+          ),
         ),
-      ),
-    );
+      );
+    } else if (card['type'] == 'audio') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SummaryPage(
+            title: cardDetails['title'] ?? 'No Title',
+            timestamp: DateTime.now().toString(),
+            summary: cardDetails['summary'] ?? 'No Summary Available',
+            transcript: cardDetails['transcript'] ?? 'No Transcript Available',
+            type: 'audio',
+          ),
+        ),
+      );
+    }
   } else {
-    if ((card['type'] ?? 'audio') == 'youtube') {
+    // Eğer özet oluşturulmadıysa ilgili işlem sayfasına yönlendir
+    if (card['type'] == 'youtube') {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => YouTubePage(cardId: cardId),
         ),
       );
-    } else {
+    } else if (card['type'] == 'audio') {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => RecordingPage1(
             title: card['title'] ?? 'Untitled Note',
             folderName: card['folderName'] ?? 'All',
+            cardId: cardId,
           ),
         ),
       );

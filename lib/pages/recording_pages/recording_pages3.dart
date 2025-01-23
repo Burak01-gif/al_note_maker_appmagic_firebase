@@ -7,8 +7,9 @@ import 'package:audioplayers/audioplayers.dart';
 class RecordingPage3 extends StatefulWidget {
   final String audioPath; // Yerel ses dosyasının yolu
   final String audioUrl;  // Firebase Storage'dan alınan URL
+  final String cardId;
 
-  const RecordingPage3({Key? key, required this.audioPath, required this.audioUrl}) : super(key: key);
+  const RecordingPage3({Key? key, required this.audioPath, required this.audioUrl, required this.cardId}) : super(key: key);
 
   @override
   State<RecordingPage3> createState() => _RecordingPage3State();
@@ -286,14 +287,23 @@ onPressed: () async {
     Navigator.pop(context); // Progress barı kapat
 
     // Firebase Firestore'a veriyi kaydetme işlemi
-    await FirebaseFirestore.instance.collection('summaries').add({
+    await FirebaseFirestore.instance.collection('cards')
+    .doc(widget.cardId)
+    .collection('summaries')
+    .doc('default_summary')
+    .set({
       'title': result['title'] ?? 'Generated Title',
       'timestamp': result['timestamp'] ?? 'No Timestamp Available',
       'summary': result['summary'] ?? 'No Summary Available',
       'transcript': result['transcript'] ?? 'No Transcript Available',
       'createdAt': FieldValue.serverTimestamp(),
-      'type': 'audio',
-      'audioUrl': widget.audioUrl, // Ses dosyasının URL'si de kaydediliyor
+  }, SetOptions(merge: true));
+
+    // Firestore'da isGenerated alanını güncelle
+    await FirebaseFirestore.instance.collection('cards')
+      .doc(widget.cardId)
+      .update({
+        'isGenerated': true,
     });
 
     print("Summary successfully saved to Firestore!");

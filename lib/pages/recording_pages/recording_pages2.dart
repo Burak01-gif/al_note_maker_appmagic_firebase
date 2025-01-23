@@ -12,7 +12,9 @@ import 'dart:async';
 import 'dart:io';
 
 class RecordAudioPage2 extends StatefulWidget {
-  const RecordAudioPage2({Key? key}) : super(key: key);
+  final String cardId;
+
+  const RecordAudioPage2({Key? key, required this.cardId}) : super(key: key);
 
   @override
   State<RecordAudioPage2> createState() => _RecordAudioPage2State();
@@ -112,6 +114,7 @@ Future<void> stopRecording() async {
           builder: (context) => RecordingPage3(
             audioPath: recordedFilePath!,
             audioUrl: recordedFileUrl!,
+            cardId: widget.cardId,
           ),
         ),
       );

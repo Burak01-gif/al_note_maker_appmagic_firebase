@@ -223,9 +223,69 @@ Future<Map<String, dynamic>?> getCardDetailsWithStatus(String cardId) async {
   }
 }
 
+  Future<String?> addAudioCard(String? folderId) async {
+  if (_userId == null) return null;
+
+  try {
+    final docRef = await FirebaseFirestore.instance.collection('cards').add({
+      'deviceId': _userId,
+      'title': "Recorded Audio",
+      'type': 'audio',
+      'isFavorite': false,
+      'isGenerated': false,
+      'folderId': folderId ?? '',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    await docRef.collection('summaries').doc('default_summary').set({
+      'title': null,
+      'summary': null,
+      'transcript': null,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    _cards.add({
+      'id': docRef.id,
+      'title': "Recorded Audio",
+      'type': 'audio',
+      'isFavorite': false,
+      'isGenerated': false,
+      'folderId': folderId ?? '',
+      'deviceId': _userId,
+      'createdAt': DateTime.now(),
+    });
+
+    notifyListeners();
+    print("Audio card added successfully with ID: ${docRef.id}");
+    return docRef.id;  // Kartın Firestore ID'sini döndür
+  } catch (e) {
+    print("Failed to add audio card: $e");
+    return null;
+  }
+}
 
 
+  Future<void> markAudioAsGenerated(String cardId, String title, String summary, String transcript) async {
+    try {
+      await FirebaseFirestore.instance.collection('cards').doc(cardId).update({
+        'isGenerated': true,
+      });
 
+      await FirebaseFirestore.instance.collection('cards').doc(cardId).collection('summaries').doc('default_summary').set({
+        'title': title,
+        'summary': summary,
+        'transcript': transcript,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      final card = _cards.firstWhere((card) => card['id'] == cardId);
+      card['isGenerated'] = true;
+
+      notifyListeners();
+    } catch (e) {
+      print("Failed to mark audio as generated: $e");
+    }
+  }
 
 
 Future<void> addFolder(String folderName) async {
@@ -390,5 +450,5 @@ Future<void> addFolder(String folderName) async {
 }
 
 
-  
+
 }
