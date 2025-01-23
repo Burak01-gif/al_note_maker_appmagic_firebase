@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:al_note_maker_appmagic/cupertinoo/show_add_folder_dialog.dart';
 import 'package:al_note_maker_appmagic/cupertinoo/show_folder_Options.dart';
 import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
+import 'package:al_note_maker_appmagic/widgets/widgets_home/congratulations_dialog.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/empty_state_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/buildFoldersView.dart';
 import 'package:flutter/material.dart';
@@ -143,54 +144,18 @@ class HomePage extends StatelessWidget {
           ),
         ),
 
-        // Blur ve Dialog Gösterimi
+        // CongratulationsDialog Dialog
         if (showDialog)
-          BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-            child: GestureDetector(
-              onTap: () {
-                // Blur üzerine tıklama işlemine gerek yok
-              },
-              child: Container(
-                color: Colors.black.withOpacity(0.5),
-                child: Center(
-                  child: AlertDialog(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    title: const Text(
-                      "Congratulations!",
-                      textAlign: TextAlign.center,
-                    ),
-                    content: const Text(
-                      "You have 50 minutes of usage!",
-                      textAlign: TextAlign.center,
-                    ),
-                    actions: [
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const HomePage(showDialog: false),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3478F6),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text("Accept"),
-                      ),
-                    ],
-                  ),
+          CongratulationsDialog(
+            onClose: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HomePage(showDialog: false),
                 ),
-              ),
-            ),
-          ),
+            );
+          },
+        ),
       ],
     );
   }

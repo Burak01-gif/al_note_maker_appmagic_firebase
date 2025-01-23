@@ -1,14 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-/// Folders grid view oluşturur.
-/// [folders] klasör isimlerini içeren liste.
-/// [folderNameController] yeni klasör için text controller.
-/// [onAddFolder] yeni klasör ekleme callback'i.
-/// [onDeleteFolder] klasör silme callback'i.
-/// [showAddFolderDialog] yeni klasör ekleme dialog gösterimi için callback.
-/// [showFolderOptions] klasör seçenekleri menüsünü göstermek için callback.
-
 Widget buildFoldersView({
   required BuildContext context,
   required List<String> folders,
@@ -28,13 +20,20 @@ Widget buildFoldersView({
   }) showFolderOptions,
   required Function(String folderName) onFolderTap,
 }) {
+  // Ekran genişliği
+  final double screenWidth = MediaQuery.of(context).size.width;
+  final int crossAxisCount = screenWidth > 600 ? 3 : 2; // Tablet ve telefon için farklı kolon sayısı
+
   return GridView.builder(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 0.8,
+    padding: EdgeInsets.symmetric(
+      horizontal: screenWidth * 0.05, // Dinamik yan boşluk
+      vertical: 16.0,
+    ),
+    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+      crossAxisCount: crossAxisCount,
+      crossAxisSpacing: screenWidth * 0.04,
+      mainAxisSpacing: screenWidth * 0.04,
+      childAspectRatio: screenWidth < 400 ? 0.75 : 0.85, // Küçük ekranlar için oran ayarı
     ),
     itemCount: folders.length + 1,
     itemBuilder: (context, index) {
@@ -51,7 +50,7 @@ Widget buildFoldersView({
               },
               child: Container(
                 width: double.infinity,
-                height: 180,
+                height: screenWidth * 0.4, // Dinamik yükseklik
                 decoration: BoxDecoration(
                   color: Colors.orange[100],
                   borderRadius: BorderRadius.circular(16),
@@ -80,9 +79,9 @@ Widget buildFoldersView({
       }
 
       if (index - 1 < 0 || index - 1 >= folders.length) {
-        return const SizedBox(); // Geçersiz bir index durumu için boş bir widget döndür.
+        return const SizedBox();
       }
-        final folderName = folders[index - 1];
+      final folderName = folders[index - 1];
 
       return Column(
         children: [
@@ -92,7 +91,7 @@ Widget buildFoldersView({
             },
             child: Container(
               width: double.infinity,
-              height: 180,
+              height: screenWidth * 0.4, // Dinamik yükseklik
               decoration: BoxDecoration(
                 color: Colors.teal[50],
                 borderRadius: BorderRadius.circular(16),
@@ -129,9 +128,9 @@ Widget buildFoldersView({
                     showFolderOptions(
                       context: context,
                       folderName: folderName,
-                      index: index-1,
+                      index: index - 1,
                       onDelete: () {
-                        onDeleteFolder(index-1);
+                        onDeleteFolder(index - 1);
                       },
                     );
                   },

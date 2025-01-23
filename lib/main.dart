@@ -50,7 +50,7 @@ class Initializer extends StatelessWidget {
     String? deviceId = prefs.getString('device_id');
 
     if (deviceId == null) {
-      // Yoksa yeni bir UUID oluştur ve kaydet
+      // Yeni UUID oluştur ve kaydet
       deviceId = uuid.v4();
       await prefs.setString('device_id', deviceId);
     }
@@ -66,23 +66,20 @@ class Initializer extends StatelessWidget {
     final userDoc = firestore.collection('users').doc(deviceId);
 
     try {
-      // Kullanıcı belgesini kontrol et
       final snapshot = await userDoc.get();
-
       if (snapshot.exists) {
-        // Daha önce giriş yapılmışsa
-        return false; // Daha önce giriş yapmış kullanıcı
+        return false; // Kullanıcı daha önce giriş yapmış
       } else {
-        // İlk giriş, kullanıcıyı kaydet
+        // Yeni kullanıcı kaydet
         await userDoc.set({
           'deviceId': deviceId,
           'firstLogin': true,
           'createdAt': FieldValue.serverTimestamp(),
         });
-        return true; // İlk kez giriş yapan kullanıcı
+        return true; // Yeni kullanıcı
       }
     } catch (e) {
-      print("Firestore yazma hatası: $e");
+      print("Firestore hatası: $e");
       return false;
     }
   }
@@ -93,12 +90,29 @@ class Initializer extends StatelessWidget {
       future: _checkUserStatus(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          // Veriler yüklenirken gösterilecek
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
+
+        if (snapshot.hasError) {
+          // Hata durumunda onboarding sayfasına git
+          print("Error: ${snapshot.error}");
+          return const Onboarding1();
+        }
+
         if (snapshot.hasData) {
-          return HomePage(showDialog: snapshot.data!); 
+          if (snapshot.data == true) {
+            // Yeni kullanıcı onboarding sayfasına yönlendirilecek
+            return const Onboarding1();
+          } else {
+            // Daha önce giriş yapılmış, ana sayfaya yönlendir
+            return const HomePage(showDialog: false);
+          }
         } else {
-          return const Onboarding1(); 
+          // Veri alınamazsa varsayılan olarak onboarding sayfasına yönlendir
+          return const Onboarding1();
         }
       },
     );
