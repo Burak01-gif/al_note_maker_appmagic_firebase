@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:al_note_maker_appmagic/cupertinoo/show_add_folder_dialog.dart';
 import 'package:al_note_maker_appmagic/cupertinoo/show_folder_Options.dart';
 import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
