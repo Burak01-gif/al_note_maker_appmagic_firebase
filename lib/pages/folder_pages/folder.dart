@@ -1,4 +1,4 @@
-import 'package:al_note_maker_appmagic/cupertinoo/showOptions.dart';
+import 'package:al_note_maker_appmagic/cupertino/showOptions.dart';
 import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

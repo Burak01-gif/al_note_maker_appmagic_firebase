@@ -6,13 +6,17 @@ import 'package:flutter/foundation.dart';
 class HomeController extends ChangeNotifier {
   final List<Map<String, dynamic>> _cards = [];
   final List<Map<String, dynamic>> _folders = [];
+  List<Map<String, dynamic>> _filteredCards = [];
   int _selectedIndex = 0;
   String? _userId;
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  bool _isSearching = false;
 
   List<Map<String, dynamic>> get cards => List.unmodifiable(_cards);
   List<Map<String, dynamic>> get folders => List.unmodifiable(_folders);
+  List<Map<String, dynamic>> get filteredCards => List.unmodifiable(_filteredCards);
   int get selectedIndex => _selectedIndex;
+  bool get isSearching => _isSearching;
 
   String get userId => _userId ?? '';
 
@@ -73,7 +77,7 @@ void _listenToFolders() {
       _folders.add({
         'id': doc.id,
         'name': data['name'],
-        'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
+        'createdAt': data['createdAt'] != null ? (data['createdAt'] as Timestamp).toDate() : DateTime.now(),
         'deviceId': data['deviceId'],
       });
     }
@@ -100,7 +104,7 @@ void _listenToCards() {
         'isFavorite': data['isFavorite'],
         'folderId': data['folderId'],
         'type': data['type'] ?? 'audio', // Default olarak 'audio'
-        'createdAt': (data['createdAt'] as Timestamp?)?.toDate(),
+        'createdAt': data['createdAt'] != null ? (data['createdAt'] as Timestamp).toDate() : DateTime.now(),
         'deviceId': data['deviceId'],
       });
     }
@@ -449,6 +453,54 @@ Future<void> addFolder(String folderName) async {
   }
 }
 
+/// Arama işlemini yapan fonksiyon
+void searchCards(String query) async {
+  if (_userId == null) return;
 
+  if (query.isEmpty) {
+    _isSearching = false;
+    _filteredCards = _cards;  // Arama boşsa tüm kartları göster
+  } else {
+    _isSearching = true;
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('cards')
+          .where('deviceId', isEqualTo: _userId)
+          .get();
+
+      List<Map<String, dynamic>> matchingCards = [];
+
+      for (var doc in snapshot.docs) {
+        var summarySnapshot = await FirebaseFirestore.instance
+            .collection('cards')
+            .doc(doc.id)
+            .collection('summaries')
+            .doc('default_summary')
+            .get();
+
+        if (summarySnapshot.exists) {
+          var transcript = summarySnapshot.data()?['transcript'] ?? '';
+
+          if (transcript.toLowerCase().contains(query.toLowerCase())) {
+            matchingCards.add({
+              'id': doc.id,
+              'title': doc['title'],
+              'isFavorite': doc['isFavorite'],
+              'folderId': doc['folderId'],
+              'type': doc['type'] ?? 'audio',
+              'transcript': transcript,
+              'createdAt': doc['createdAt'] != null ? (doc['createdAt'] as Timestamp).toDate() : DateTime.now(),
+            });
+          }
+        }
+      }
+
+      _filteredCards = matchingCards;
+    } catch (e) {
+      print("Error searching cards: $e");
+    }
+  }
+  notifyListeners();
+}
 
 }

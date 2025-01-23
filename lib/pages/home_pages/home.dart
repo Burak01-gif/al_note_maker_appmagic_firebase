@@ -1,5 +1,5 @@
-import 'package:al_note_maker_appmagic/cupertinoo/show_add_folder_dialog.dart';
-import 'package:al_note_maker_appmagic/cupertinoo/show_folder_Options.dart';
+import 'package:al_note_maker_appmagic/cupertino/show_add_folder_dialog.dart';
+import 'package:al_note_maker_appmagic/cupertino/show_folder_Options.dart';
 import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/congratulations_dialog.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/empty_state_widget.dart';
@@ -12,7 +12,7 @@ import 'package:al_note_maker_appmagic/widgets/widgets_home/tab_bar_widget.dart'
 import 'package:al_note_maker_appmagic/widgets/widgets_home/content_cards_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/show_create_note_button.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/search_bar_widget.dart';
-import 'package:al_note_maker_appmagic/cupertinoo/showOptions.dart';
+import 'package:al_note_maker_appmagic/cupertino/showOptions.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/youtube_view_widget.dart';
 
 class HomePage extends StatelessWidget {
@@ -40,6 +40,7 @@ class HomePage extends StatelessWidget {
               SearchBarWidget(
                 hintText: 'Search',
                 onChanged: (value) {
+                  Provider.of<HomeController>(context, listen: false).searchCards(value);
                   print('Search: $value');
                 },
               ),
@@ -116,7 +117,9 @@ class HomePage extends StatelessWidget {
                             ? EmptyStateWidget(
                                 selectedIndex: controller.selectedIndex)
                             : ContentCardsWidget(
-                                cards: controller.getFilteredCards(),
+                                cards: controller.filteredCards.isEmpty
+                                    ? controller.getFilteredCards()
+                                    : controller.filteredCards,
                                 selectedIndex: controller.selectedIndex,
                                 onDelete: (index) async {
                                   final cardId =
@@ -152,9 +155,9 @@ class HomePage extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) => const HomePage(showDialog: false),
                 ),
-            );
-          },
-        ),
+              );
+            },
+          ),
       ],
     );
   }

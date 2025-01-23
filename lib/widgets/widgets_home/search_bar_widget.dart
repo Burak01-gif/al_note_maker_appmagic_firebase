@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
 
 class SearchBarWidget extends StatelessWidget {
   final String hintText;
-  final Function(String) onChanged;
+   final ValueChanged<String>? onChanged;
 
   const SearchBarWidget({
     Key? key,
     this.hintText = 'Search',
-    required this.onChanged,
+    this.onChanged,
   }) : super(key: key);
 
   @override
@@ -20,7 +22,9 @@ class SearchBarWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: TextField(
-          onChanged: onChanged, 
+          onChanged: (value) {
+            Provider.of<HomeController>(context, listen: false).searchCards(value);
+          },
           decoration: InputDecoration(
             border: InputBorder.none,
             prefixIcon: const Icon(Icons.search, color: Colors.grey),

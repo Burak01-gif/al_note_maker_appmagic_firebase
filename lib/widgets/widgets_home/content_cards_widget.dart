@@ -165,8 +165,7 @@ onTap: () async {
   color: (card['type'] ?? 'audio') == 'youtube'
       ? Colors.red
       : const Color(0xFF5584EC),
-),
-
+),                                        
                                       const SizedBox(height: 8),
                                       Text(
                                         card['title'] ?? 'Untitled Note',
