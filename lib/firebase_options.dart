@@ -70,7 +70,7 @@ class DefaultFirebaseOptions {
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyAKupROBDWfzYk0hkXJO20aTHrVKQaQb9o',
     appId: '1:1004556392474:ios:99774671a496b606d4d9a3',
-    messagingSenderId: '1004556392474',
+    messagingSend1erId: '1004556392474',
     projectId: 'appmagic-firebase',
     storageBucket: 'appmagic-firebase.firebasestorage.app',
     iosBundleId: 'com.example.alNoteMakerAppmagic',
