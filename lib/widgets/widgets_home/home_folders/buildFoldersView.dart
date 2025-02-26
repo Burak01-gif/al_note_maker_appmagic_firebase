@@ -17,23 +17,24 @@ Widget buildFoldersView({
     required String folderName,
     required int index,
     required VoidCallback onDelete,
+    required Offset position,  
   }) showFolderOptions,
   required Function(String folderName) onFolderTap,
 }) {
   // Ekran genişliği
   final double screenWidth = MediaQuery.of(context).size.width;
-  final int crossAxisCount = screenWidth > 600 ? 3 : 2; // Tablet ve telefon için farklı kolon sayısı
+  final int crossAxisCount = screenWidth > 600 ? 3 : 2; 
 
   return GridView.builder(
     padding: EdgeInsets.symmetric(
-      horizontal: screenWidth * 0.05, // Dinamik yan boşluk
+      horizontal: screenWidth * 0.05, 
       vertical: 16.0,
     ),
     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: crossAxisCount,
       crossAxisSpacing: screenWidth * 0.04,
       mainAxisSpacing: screenWidth * 0.04,
-      childAspectRatio: screenWidth < 400 ? 0.75 : 0.85, // Küçük ekranlar için oran ayarı
+      childAspectRatio: screenWidth < 400 ? 0.75 : 0.85, 
     ),
     itemCount: folders.length + 1,
     itemBuilder: (context, index) {
@@ -50,7 +51,7 @@ Widget buildFoldersView({
               },
               child: Container(
                 width: double.infinity,
-                height: screenWidth * 0.4, // Dinamik yükseklik
+                height: screenWidth * 0.4, 
                 decoration: BoxDecoration(
                   color: Colors.orange[100],
                   borderRadius: BorderRadius.circular(16),
@@ -91,7 +92,7 @@ Widget buildFoldersView({
             },
             child: Container(
               width: double.infinity,
-              height: screenWidth * 0.4, // Dinamik yükseklik
+              height: screenWidth * 0.4,
               decoration: BoxDecoration(
                 color: Colors.teal[50],
                 borderRadius: BorderRadius.circular(16),
@@ -123,23 +124,52 @@ Widget buildFoldersView({
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {
-                    showFolderOptions(
-                      context: context,
-                      folderName: folderName,
-                      index: index - 1,
-                      onDelete: () {
-                        onDeleteFolder(index - 1);
-                      },
-                    );
-                  },
-                  child: const Icon(
-                    Icons.more_vert,
-                    size: 18,
-                    color: Colors.black45,
-                  ),
-                ),
+ GestureDetector(
+  onTapDown: (TapDownDetails details) {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    overlay.globalToLocal(details.globalPosition);
+    // final Offset position = overlay.globalToLocal(details.globalPosition); 
+
+    showMenu(
+      context: context,
+      position: RelativeRect.fromLTRB(
+        details.globalPosition.dx, 
+        details.globalPosition.dy,  
+        details.globalPosition.dx + 1,  
+        details.globalPosition.dy + 1,
+      ),
+      items: [
+        PopupMenuItem(
+          value: 'delete',
+          child: ListTile(
+            leading: Icon(Icons.delete, color: Colors.red),
+            title: Text('Delete'),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'cancel',
+          child: ListTile(
+            leading: Icon(Icons.cancel, color: Colors.grey),
+            title: Text('Cancel'),
+          ),
+        ),
+      ],
+    ).then((value) {
+      if (value == 'delete') {
+        onDeleteFolder(index - 1);
+      } else if (value == 'cancel') {
+        Navigator.pop(context);  // Menü kapat
+      }
+    });
+  },
+  child: const Icon(
+    Icons.more_vert,
+    size: 18,
+    color: Colors.black45,
+  ),
+),
+
+
               ],
             ),
           ),

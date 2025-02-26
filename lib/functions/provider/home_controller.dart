@@ -103,7 +103,7 @@ void _listenToCards() {
         'title': data['title'],
         'isFavorite': data['isFavorite'],
         'folderId': data['folderId'],
-        'type': data['type'] ?? 'audio', // Default olarak 'audio'
+        'type': data['type'] ?? 'audio', 
         'createdAt': data['createdAt'] != null ? (data['createdAt'] as Timestamp).toDate() : DateTime.now(),
         'deviceId': data['deviceId'],
       });
@@ -124,8 +124,8 @@ void _listenToCards() {
       'title': title,
       'type': type,
       'isFavorite': false,
-      'isGenerated': false,  
-      'folderId': folderId ?? '',  // folderId null ise boş string olarak kaydet
+      'isGenerated': false,
+      'folderId': folderId ?? '',
       'createdAt': FieldValue.serverTimestamp(),
     });
 
@@ -169,7 +169,6 @@ Future<void> addCardWithVerification(String? folderId, {bool isYouTube = false})
     print("Failed to verify card in Firestore");
   }
 }
-
 
 
 Future<void> markCardAsGenerated(String cardId) async {
@@ -261,7 +260,7 @@ Future<Map<String, dynamic>?> getCardDetailsWithStatus(String cardId) async {
 
     notifyListeners();
     print("Audio card added successfully with ID: ${docRef.id}");
-    return docRef.id;  // Kartın Firestore ID'sini döndür
+    return docRef.id; 
   } catch (e) {
     print("Failed to add audio card: $e");
     return null;
@@ -502,5 +501,29 @@ void searchCards(String query) async {
   }
   notifyListeners();
 }
+
+// Firestore'da kartın folderId'sini güncelle
+Future<void> moveCardToFolder(String cardId, String? newFolderId) async {
+  if (_userId == null) return;
+
+  try {
+    
+    await FirebaseFirestore.instance.collection('cards').doc(cardId).update({
+      'folderId': newFolderId ?? '',
+    });
+
+    // Yerel veriyi de güncelle
+    final cardIndex = _cards.indexWhere((card) => card['id'] == cardId);
+    if (cardIndex != -1) {
+      _cards[cardIndex]['folderId'] = newFolderId ?? '';
+      notifyListeners();
+    }
+
+    print("Card moved to folder successfully.");
+  } catch (e) {
+    print("Failed to move card to folder: $e");
+  }
+}
+
 
 }

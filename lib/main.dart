@@ -1,4 +1,4 @@
-import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
+import 'package:al_note_maker_appmagic/functions/provider/home_controller.dart';
 import 'package:al_note_maker_appmagic/pages/home_pages/home.dart';
 import 'package:al_note_maker_appmagic/pages/onboarding_pages/onboarding1.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'firebase_options.dart';
+
+// mrBeast2 https://www.youtube.com/watch?v=egpUFD0HOqI
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

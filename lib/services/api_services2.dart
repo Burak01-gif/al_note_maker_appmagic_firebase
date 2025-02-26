@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService2 {
-  final String apiKey = 'MP1019R0PQ4UCNYTG0IDQTA13HSJNV90SMYZ';
+  final String apiKey = '// API KEYY';
   final String postApiUrl =
-      'https://flows.eachlabs.ai/api/v1/81de5859-a721-46ca-b5bf-52870653eef2/trigger';
+      '//';
   final String getApiUrl =
-      'https://flows.eachlabs.ai/api/v1/81de5859-a721-46ca-b5bf-52870653eef2/executions/';
+      '//';
 
   /// İş akışını tetikler ve `trigger_id` döner.
   Future<String?> triggerWorkflow({

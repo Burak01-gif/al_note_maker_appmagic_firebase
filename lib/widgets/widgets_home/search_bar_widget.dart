@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
+import 'package:al_note_maker_appmagic/functions/provider/home_controller.dart';
 
 class SearchBarWidget extends StatelessWidget {
   final String hintText;

@@ -1,8 +1,10 @@
+import 'package:al_note_maker_appmagic/animations/recording_page_animations/record_progress.dart';
 import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_appbar_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_backgroundcolor_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_button_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/recording_widgets/recording_heador_widget.dart';
 import 'package:al_note_maker_appmagic/pages/recording_pages/recording_pages3.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
@@ -22,9 +24,9 @@ class RecordAudioPage2 extends StatefulWidget {
 
 class _RecordAudioPage2State extends State<RecordAudioPage2> {
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
-  bool isRecording = false; // Kayıt durumu
-  bool isProcessing = false; // İşleme durumu
-  int secondsElapsed = 0; // Geçen süre
+  bool isRecording = false; 
+  bool isProcessing = false;
+  int secondsElapsed = 0;
   String? recordedFilePath;
   String? recordedFileUrl; // Firebase Storage URL
   Timer? timer;
@@ -138,7 +140,7 @@ Future<String?> _uploadToFirebase(File file) async {
 
     final uploadTask = storageRef.putFile(
       file,
-      SettableMetadata(contentType: 'audio/mp4'),  // M4A için MIME türü
+      SettableMetadata(contentType: 'audio/mp4'),  
     );
 
     final snapshot = await uploadTask.whenComplete(() => null);
@@ -159,68 +161,100 @@ Future<String?> _uploadToFirebase(File file) async {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: const RecordingAppbarWidget(),
-      body: GradientBackground(
-        child: Column(
-          children: [
-            const Spacer(flex: 2),
-            const RecordingHeaderWidget(),
-            const Spacer(flex: 2),
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: const Color(0xFFF9FAFB),
+    appBar: const RecordingAppbarWidget(),
+    body: GradientBackground(
+      child: Column(
+        children: [
+          const Spacer(flex: 2),
+          const RecordingHeaderWidget(),
+          const Spacer(flex: 2),
+          if (isProcessing) 
             SizedBox(
               height: 200,
               width: 200,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+children: [
+  const DotsLoadingIndicator(),
+  const SizedBox(height: 16),
+  const Text(
+    "Record processing",
+    style: TextStyle(
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+      color: Colors.black,
+    ),
+  ),
+  const SizedBox(height: 8),
+  const Text(
+    "Please wait...",
+    style: TextStyle(
+      fontSize: 16,
+      color: Colors.grey,
+    ),
+  ),
+]
+
+              ),
+            )
+          else
+            SizedBox(
+              height: 200,
+              width: 220,
               child: isRecording
                   ? Stack(
                       alignment: Alignment.center,
                       children: [
-                        CircularProgressIndicator(
-                          value: (secondsElapsed % 60) / 60,
-                          color: const Color(0xFF3478F6),
-                          strokeWidth: 12,
+                        // Arka plan çemberi (boş çember efekti)
+                        SizedBox(
+                          height: 189,
+                          width: 189,
+                          child: CircularProgressIndicator(
+                            value: 1.0,
+                            backgroundColor: Colors.white,
+                            color: Colors.white.withOpacity(0.3),
+                            strokeWidth: 12,
+                          ),
                         ),
-                        Text(
-                          "${secondsElapsed ~/ 60}:${(secondsElapsed % 60).toString().padLeft(2, '0')}",
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
+                        // Dış ilerleme çemberi (kayıt süresine göre ilerliyor)
+                        SizedBox(
+                          height: 189,
+                          width: 189,
+                          child: CircularProgressIndicator(
+                            value: (secondsElapsed % 60) / 60.0, 
+                            color: const Color(0xFF3478F6),
+                            strokeWidth: 10,
+                          ),
+                        ),
+                        // Sayaç metni
+                        Positioned(
+                          child: Text(
+                            "${(secondsElapsed ~/ 60).toString().padLeft(2, '0')}:${(secondsElapsed % 60).toString().padLeft(2, '0')}",
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
                       ],
                     )
-                  : isProcessing
-                      ? const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircularProgressIndicator(
-                              color: Color(0xFF3478F6),
-                            ),
-                            SizedBox(height: 16),
-                            Text(
-                              "Uploading...",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 20,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        )
-                      : const SizedBox.shrink(),
+                  : const SizedBox.shrink(),  // Kayıt başlamadan önce hiçbir şey gösterme
             ),
-            const Spacer(flex: 3),
-            RecordingActionWidget(
-              isRecording: isRecording,
-              isProcessing: isProcessing,
-              onStartRecording: startRecording,
-              onStopRecording: stopRecording,
-            ),
-            const Spacer(flex: 2),
-          ],
-        ),
+          const Spacer(flex: 3),
+          RecordingActionWidget(
+            isRecording: isRecording,
+            isProcessing: isProcessing,
+            onStartRecording: startRecording,
+            onStopRecording: stopRecording,
+          ),
+          const Spacer(flex: 2),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

@@ -1,4 +1,4 @@
-import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
+import 'package:al_note_maker_appmagic/functions/provider/home_controller.dart';
 import 'package:al_note_maker_appmagic/pages/recording_pages/recording_pages1.dart';
 import 'package:al_note_maker_appmagic/pages/recording_pages/sumaarypages.dart';
 import 'package:al_note_maker_appmagic/pages/youtube_pages/youtube.dart';
@@ -88,6 +88,7 @@ onTap: () async {
             timestamp: DateTime.now().toString(),
             summary: cardDetails['summary'] ?? 'No Summary Available',
             transcript: cardDetails['transcript'] ?? 'No Transcript Available',
+            cardId: cardId,
           ),
         ),
       );
@@ -101,6 +102,7 @@ onTap: () async {
             summary: cardDetails['summary'] ?? 'No Summary Available',
             transcript: cardDetails['transcript'] ?? 'No Transcript Available',
             type: 'audio',
+            cardId: cardId,
           ),
         ),
       );
@@ -190,91 +192,65 @@ onTap: () async {
                                   ),
                                 ),
                                 Positioned(
-                                  top: 8.0,
-                                  right: 8.0,
-                                  child: GestureDetector(
-                                    onTapDown: (TapDownDetails details) {
-                                      final position = details.globalPosition;
-                                      showMenu(
-                                        context: context,
-                                        position: RelativeRect.fromLTRB(
-                                          position.dx,
-                                          position.dy,
-                                          position.dx + 1,
-                                          position.dy + 1,
-                                        ),
-                                        items: [
-                                          PopupMenuItem(
-                                            padding: EdgeInsets.zero,
-                                            child: Container(
-                                              width: 250,
-                                              height: 50,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFF7F7F7),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                              alignment: Alignment.centerLeft,
-                                              child: const Row(
-                                                children: [
-                                                  SizedBox(width: 16),
-                                                  Icon(Icons.delete,
-                                                      color: Colors.red),
-                                                  SizedBox(width: 8),
-                                                  Text(
-                                                    'Delete',
-                                                    style: TextStyle(
-                                                      color: Colors.black,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            onTap: () {
-                                              onDelete(index);
-                                            },
-                                          ),
-                                          PopupMenuItem(
-                                            padding: EdgeInsets.zero,
-                                            child: Container(
-                                              width: 250,
-                                              height: 50,
-                                              decoration: BoxDecoration(
-                                                color: const Color(0xFFF7F7F7),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                              ),
-                                              alignment: Alignment.centerLeft,
-                                              child: const Row(
-                                                children: [
-                                                  SizedBox(width: 16),
-                                                  Icon(Icons.cancel,
-                                                      color: Colors.grey),
-                                                  SizedBox(width: 8),
-                                                  Text(
-                                                    'Cancel',
-                                                    style: TextStyle(
-                                                      color: Colors.black,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            onTap: () {
-                                              Navigator.pop(context);
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                    child: const Icon(
-                                      Icons.more_vert,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ),
+  top: 8.0,
+  right: 8.0,
+  child: GestureDetector(
+    onTapDown: (TapDownDetails details) {
+      final position = details.globalPosition;
+      showMenu(
+        context: context,
+        position: RelativeRect.fromLTRB(
+          position.dx,
+          position.dy,
+          position.dx + 1,
+          position.dy + 1,
+        ),
+        items: [
+          PopupMenuItem(
+            value: 'delete',
+            child: Row(
+              children: [
+                const Icon(Icons.delete, color: Colors.red),
+                const SizedBox(width: 8),
+                const Text(
+                  'Delete',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          PopupMenuItem(
+            value: 'cancel',
+            child: Row(
+              children: [
+                const Icon(Icons.cancel, color: Colors.grey),
+                const SizedBox(width: 8),
+                const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ).then((value) {
+        if (value == 'delete') {
+          onDelete(index);
+        }
+      });
+    },
+    child: const Icon(
+      Icons.more_vert,
+      color: Colors.grey,
+    ),
+  ),
+),
+
                               ],
                             ),
                           ),

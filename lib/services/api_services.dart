@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  final String apiKey = "MP1019R0PQ4UCNYTG0IDQTA13HSJNV90SMYZ";
+  final String apiKey = "// API KEY";
   final String postApiUrl =
-      "https://flows.eachlabs.ai/api/v1/c96a69d9-de9b-4fb8-813d-56afbd582bae/trigger";
+      "//";
   final String getApiUrl =
-      "https://flows.eachlabs.ai/api/v1/c96a69d9-de9b-4fb8-813d-56afbd582bae/executions/";
+      "//";
 
   Future<String?> triggerWorkflow(String youtubeUrl, String language,
       String rules, String outputFormat) async {

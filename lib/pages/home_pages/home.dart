@@ -1,6 +1,6 @@
 import 'package:al_note_maker_appmagic/cupertino/show_add_folder_dialog.dart';
 import 'package:al_note_maker_appmagic/cupertino/show_folder_Options.dart';
-import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
+import 'package:al_note_maker_appmagic/functions/provider/home_controller.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/congratulations_dialog.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/empty_state_widget.dart';
 import 'package:al_note_maker_appmagic/widgets/widgets_home/home_folders/buildFoldersView.dart';
@@ -83,6 +83,7 @@ class HomePage extends StatelessWidget {
                           required String folderName,
                           required int index,
                           required VoidCallback onDelete,
+                          required Offset position,
                         }) {
                           final folderId =
                               controller.folders[index]['id'] as String;

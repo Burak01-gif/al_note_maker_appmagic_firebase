@@ -1,4 +1,4 @@
-import 'package:al_note_maker_appmagic/functions/home/home_controller.dart';
+import 'package:al_note_maker_appmagic/functions/provider/home_controller.dart';
 import 'package:al_note_maker_appmagic/pages/youtube_pages/youtubeSummaryPage.dart';
 import 'package:al_note_maker_appmagic/services/api_services.dart';
 import 'package:al_note_maker_appmagic/widgets/youtube_widgets/continue_button.dart';
@@ -18,76 +18,137 @@ class YouTubePage extends StatefulWidget {
 }
 
 class _YouTubePageState extends State<YouTubePage> {
-  String selectedLanguage = "Auto Detect"; // Kullanıcının seçtiği dil
-  String youtubeUrl = ""; // YouTube URL
-  bool isLoading = false; // Yükleme durumu
-  String loadingMessage = "Loading YouTube video"; // Yükleme mesajı
+  String selectedLanguage = "Auto Detect";
+  String youtubeUrl = ""; 
+  bool isLoading = false; 
+  String loadingMessage = "Loading YouTube video"; 
 
   void showLanguageMenu(BuildContext context, Offset position) async {
-    // Dil seçim menüsü fonksiyonu buraya gelebilir.
+  final List<String> popularLanguages = [
+    "English",
+    "Turkish",
+    "Spanish",
+    "French",
+    "German",
+    "Italian",
+    "Chinese",
+    "Japanese",
+    "Russian",
+    "Portuguese"
+  ];
+
+  final selectedLang = await showMenu<String>(
+    context: context,
+    position: RelativeRect.fromLTRB(position.dx, position.dy, position.dx + 1, position.dy + 1),
+    items: popularLanguages.map((language) {
+      return PopupMenuItem<String>(
+        value: language,
+        child: Text(language),
+      );
+    }).toList(),
+  );
+
+  if (selectedLang != null) {
+    setState(() {
+      selectedLanguage = selectedLang;  
+    });
+  }
+}
+
+
+  void handleContinue() async {
+  if (youtubeUrl.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Please enter a valid YouTube URL")),
+    );
+    return;
   }
 
-  Future<void> handleContinue() async {
-    if (youtubeUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter a valid YouTube URL")),
-      );
-      return;
-    }
-
-    setState(() {
-      isLoading = true; // Yükleme ekranını göster
-      loadingMessage = "Processing your request...";
-    });
-
-    try {
-      final apiService = ApiService(); // API servisini başlat
-      final triggerId = await apiService.triggerWorkflow(
-        youtubeUrl,
-        selectedLanguage,
-        "Summarize the video with key points and timestamps.",
-        "json",
-      );
-
-      if (triggerId == null) {
-        throw Exception("Trigger ID could not be retrieved.");
-      }
-
-      final result = await apiService.pollExecutionStatus(triggerId);
-
-      // Firestore'da kartın isGenerated durumunu güncelle
-      final homeController = Provider.of<HomeController>(context, listen: false);
-      await homeController.markCardAsGenerated(widget.cardId);
-
-      // Firestore'daki kartın summary bölümünü güncelle
-      await homeController.updateCardSummary(
-        widget.cardId,
-        result['flow_name'] ?? 'Generated Title',
-        result['step_results']?[1]['output'] ?? 'No Summary Available',
-        result['step_results']?[0]['output'] ?? 'No Transcript Available',
-      );
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => YouTubeSummaryPage(
-            title: result['flow_name'] ?? 'Generated Title',
-            timestamp: DateTime.now().toString(),
-            summary: result['step_results']?[1]['output'] ?? 'No Summary Available',
-            transcript: result['step_results']?[0]['output'] ?? 'No Transcript Available',
-          ),
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(
+              color: Colors.black,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "Loading YouTube video",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Please stay on this screen while you wait",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+          ],
         ),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-    } finally {
-      setState(() {
-        isLoading = false; // Yükleme ekranını kapat
-      });
+    },
+  );
+
+  try {
+    final apiService = ApiService();
+    final triggerId = await apiService.triggerWorkflow(
+      youtubeUrl,
+      selectedLanguage,
+      "Summarize the video with key points and timestamps.",
+      "json",
+    );
+
+    if (triggerId == null) {
+      throw Exception("Trigger ID could not be retrieved.");
     }
+
+    final result = await apiService.pollExecutionStatus(triggerId);
+
+    final homeController = Provider.of<HomeController>(context, listen: false);
+    await homeController.markCardAsGenerated(widget.cardId);
+
+    await homeController.updateCardSummary(
+      widget.cardId,
+      result['flow_name'] ?? 'Generated Title',
+      result['step_results']?[1]['output'] ?? 'No Summary Available',
+      result['step_results']?[0]['output'] ?? 'No Transcript Available',
+    );
+
+    Navigator.pop(context); 
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => YouTubeSummaryPage(
+          title: result['flow_name'] ?? 'Generated Title',
+          timestamp: DateTime.now().toString(),
+          summary: result['step_results']?[1]['output'] ?? 'No Summary Available',
+          transcript: result['step_results']?[0]['output'] ?? 'No Transcript Available',
+          cardId: widget.cardId,
+        ),
+      ),
+    );
+  } catch (e) {
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error: $e")),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -122,7 +183,7 @@ class _YouTubePageState extends State<YouTubePage> {
                 YouTubeUrlInput(
                   onUrlChanged: (value) {
                     setState(() {
-                      youtubeUrl = value; // Kullanıcı URL girince kaydet
+                      youtubeUrl = value; 
                     });
                   },
                   onPaste: () {
@@ -130,7 +191,6 @@ class _YouTubePageState extends State<YouTubePage> {
                   },
                 ),
                 const SizedBox(height: 24),
-                // Dil Seçim Başlığı
                 const Text(
                   "Note Language",
                   style: TextStyle(
@@ -140,18 +200,15 @@ class _YouTubePageState extends State<YouTubePage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Dil Seçim Widget'ı
                 NoteLanguageSelector(
                   selectedLanguage: selectedLanguage,
                   onShowMenu: (position) => showLanguageMenu(context, position),
                 ),
                 const Spacer(),
-                // Devam Butonu
                 ContinueButton(onPressed: () => handleContinue()),
               ],
             ),
           ),
-          // Yükleme Ekranı
           if (isLoading) LoadingOverlay(loadingMessage: loadingMessage),
         ],
       ),
